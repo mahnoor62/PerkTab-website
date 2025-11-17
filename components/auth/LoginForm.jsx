@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 
-import { fetchJson } from "@/lib/api";
+import { fetchJson, setAuthToken } from "@/lib/api";
 
 async function loginRequest(credentials) {
   return await fetchJson("/api/auth/login", {
@@ -41,7 +41,12 @@ export default function LoginForm() {
     setError(null);
     setIsSubmitting(true);
     try {
-      await loginRequest(formValues);
+      const response = await loginRequest(formValues);
+      // Store JWT token in localStorage
+      if (response.token) {
+        setAuthToken(response.token);
+      }
+      // Redirect to dashboard
       window.location.href = "/";
     } catch (err) {
       // Show user-friendly error message

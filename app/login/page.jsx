@@ -1,19 +1,30 @@
-import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Box } from "@mui/material";
 import LoginForm from "@/components/auth/LoginForm";
-import { getCurrentAdminFromBackend } from "@/lib/api-server";
+import { getAuthToken } from "@/lib/api";
+import { fetchJson } from "@/lib/api";
 
-export const metadata = {
-  title: "Admin Login | DotBack",
-};
+export default function LoginPage() {
+  const router = useRouter();
 
-export default async function LoginPage() {
-  const cookieStore = await cookies();
-  const admin = await getCurrentAdminFromBackend(cookieStore);
-  if (admin) {
-    redirect("/");
-  }
+  useEffect(() => {
+    // Check if already logged in
+    const token = getAuthToken();
+    if (token) {
+      fetchJson("/api/auth/session")
+        .then((session) => {
+          if (session.authenticated) {
+            router.push("/");
+          }
+        })
+        .catch(() => {
+          // Not authenticated, stay on login page
+        });
+    }
+  }, [router]);
 
   return (
     <Box
