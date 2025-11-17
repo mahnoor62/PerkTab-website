@@ -71,6 +71,7 @@ export default function LevelList({
   selectedLevel,
   onSelectLevel,
   onAddClick,
+  canAddMoreLevels = true,
 }) {
   if (!levels.length) {
     return (
@@ -212,29 +213,31 @@ export default function LevelList({
       })}
       </Box>
       {/* Floating Add Level Button */}
-      <Fab
-        color="primary"
-        aria-label="add level"
-        onClick={onAddClick}
-        sx={{
-          position: "sticky",
-          bottom: 16,
-          left: "50%",
-          transform: "translateX(-50%)",
-          mt: 2,
-          background: "linear-gradient(135deg, #2ecc71, #27ae60)",
-          boxShadow:
-            "0 8px 24px rgba(46, 204, 113, 0.4), 0 0 0 1px rgba(46, 204, 113, 0.2)",
-          "&:hover": {
-            background: "linear-gradient(135deg, #27ae60, #229954)",
+      {canAddMoreLevels ? (
+        <Fab
+          color="primary"
+          aria-label="add level"
+          onClick={onAddClick}
+          sx={{
+            position: "sticky",
+            bottom: 16,
+            left: "50%",
+            transform: "translateX(-50%)",
+            mt: 2,
+            background: "linear-gradient(135deg, #2ecc71, #27ae60)",
             boxShadow:
-              "0 12px 32px rgba(46, 204, 113, 0.6), 0 0 0 1px rgba(46, 204, 113, 0.3)",
-          },
-          display: { xs: "flex", lg: "none" }, // Show on mobile/tablet, hide on desktop (header button visible)
-        }}
-      >
-        <AddIcon />
-      </Fab>
+              "0 8px 24px rgba(46, 204, 113, 0.4), 0 0 0 1px rgba(46, 204, 113, 0.2)",
+            "&:hover": {
+              background: "linear-gradient(135deg, #27ae60, #229954)",
+              boxShadow:
+                "0 12px 32px rgba(46, 204, 113, 0.6), 0 0 0 1px rgba(46, 204, 113, 0.3)",
+            },
+            display: { xs: "flex", lg: "none" }, // Show on mobile/tablet, hide on desktop (header button visible)
+          }}
+        >
+          <AddIcon />
+        </Fab>
+      ) : null}
     </Box>
   );
 }

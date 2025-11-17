@@ -31,6 +31,7 @@ const initialAlertState = {
 import { fetchJson, uploadFile, removeAuthToken } from "@/lib/api";
 
 export default function Dashboard({ initialLevels = [], adminEmail }) {
+  const MAX_LEVELS = 10;
   const [levels, setLevels] = useState(initialLevels);
   const [selectedLevel, setSelectedLevel] = useState(
     initialLevels[0]?.level ?? null
@@ -41,6 +42,7 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
   const [alertState, setAlertState] = useState(initialAlertState);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [isCreatingLevel, setIsCreatingLevel] = useState(false);
+  const canAddMoreLevels = levels.length < MAX_LEVELS;
 
   const selectedLevelData = useMemo(
     () => levels.find((item) => item.level === selectedLevel),
@@ -280,25 +282,27 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
                         : "rgba(12,37,66,0.08)",
                     }}
                   />
-                  <Button
-                    variant="contained"
-                    size="large"
-                    startIcon={<AddRoundedIcon />}
-                    onClick={() => setCreateDialogOpen(true)}
-                    sx={{
-                      borderRadius: 3,
-                      background: "linear-gradient(135deg, #2ecc71, #27ae60)",
-                      boxShadow:
-                        "0 8px 24px rgba(46, 204, 113, 0.4), 0 0 0 1px rgba(46, 204, 113, 0.2)",
-                      "&:hover": {
-                        background: "linear-gradient(135deg, #27ae60, #229954)",
+                  {canAddMoreLevels ? (
+                    <Button
+                      variant="contained"
+                      size="large"
+                      startIcon={<AddRoundedIcon />}
+                      onClick={() => setCreateDialogOpen(true)}
+                      sx={{
+                        borderRadius: 3,
+                        background: "linear-gradient(135deg, #2ecc71, #27ae60)",
                         boxShadow:
-                          "0 12px 32px rgba(46, 204, 113, 0.6), 0 0 0 1px rgba(46, 204, 113, 0.3)",
-                      },
-                    }}
-                  >
-                    Add Level
-                  </Button>
+                          "0 8px 24px rgba(46, 204, 113, 0.4), 0 0 0 1px rgba(46, 204, 113, 0.2)",
+                        "&:hover": {
+                          background: "linear-gradient(135deg, #27ae60, #229954)",
+                          boxShadow:
+                            "0 12px 32px rgba(46, 204, 113, 0.6), 0 0 0 1px rgba(46, 204, 113, 0.3)",
+                        },
+                      }}
+                    >
+                      Add Level
+                    </Button>
+                  ) : null}
                 </Stack>
               </Stack>
 
@@ -343,6 +347,7 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
                     selectedLevel={selectedLevel}
                     onSelectLevel={handleSelectLevel}
                     onAddClick={() => setCreateDialogOpen(true)}
+                    canAddMoreLevels={canAddMoreLevels}
                   />
                 </Box>
                 <Card
