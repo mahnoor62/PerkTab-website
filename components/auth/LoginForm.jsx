@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 
-import { fetchJson, setAuthToken } from "@/lib/api";
+import { fetchJson, setAuthToken, getAuthToken } from "@/lib/api";
 
 async function loginRequest(credentials) {
   return await fetchJson("/api/auth/login", {
@@ -45,6 +45,16 @@ export default function LoginForm() {
       // Store JWT token in localStorage
       if (response.token) {
         setAuthToken(response.token);
+        console.log("[Login] Token stored successfully");
+        // Verify token was stored
+        const storedToken = getAuthToken();
+        if (storedToken) {
+          console.log("[Login] Token verification: stored and retrieved");
+        } else {
+          console.error("[Login] Token verification: failed to retrieve token!");
+        }
+      } else {
+        console.error("[Login] No token in response:", response);
       }
       // Redirect to dashboard
       window.location.href = "/";
