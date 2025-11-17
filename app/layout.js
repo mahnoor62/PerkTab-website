@@ -2,8 +2,8 @@ import "./globals.css";
 import ThemeRegistry from "@/components/ThemeRegistry";
 
 const apiBaseFromEnv =
-  process.env.NEXT_PUBLIC_API_URL ||
-  process.env.API_URL ||
+  process.env.NEXT_PUBLIC_API_URL || 'https://perktab-backend.tecshield.net'
+  process.env.API_URL || 'https://perktab-backend.tecshield.net'
   "";
 
 export const metadata = {
