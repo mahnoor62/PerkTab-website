@@ -30,12 +30,14 @@ Verify the backend is on the correct port (default: 3001):
 Create or check `.env.local` in the **root directory** (not in backend folder):
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_AUTH_TOKEN_KEY=dotback_admin_token
 API_URL=http://localhost:3001
 ```
 
 **Important**: 
 - Restart Next.js dev server after changing environment variables
 - `NEXT_PUBLIC_API_URL` must start with `NEXT_PUBLIC_` for client-side access
+- `NEXT_PUBLIC_AUTH_TOKEN_KEY` must be defined (any non-empty string) before running the frontend
 
 #### 4. **Check CORS Configuration**
 
@@ -159,6 +161,7 @@ If backend won't start:
 - [ ] Backend server is running (check console for "Backend server running on port 3001")
 - [ ] Frontend server is running (check console for "Ready on http://localhost:3000")
 - [ ] `.env.local` exists in root with `NEXT_PUBLIC_API_URL=http://localhost:3001`
+- [ ] `.env.local` defines `NEXT_PUBLIC_AUTH_TOKEN_KEY`
 - [ ] `backend/.env` exists with `FRONTEND_URL=http://localhost:3000`
 - [ ] MongoDB is running
 - [ ] Both terminals show no errors

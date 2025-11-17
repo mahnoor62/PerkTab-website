@@ -31,7 +31,7 @@ mkdir uploads
 Create `backend/.env`:
 ```env
 MONGO_URL=mongodb://127.0.0.1:27017/DotBack
-JWT_SECRET=dotback_secret_key
+JWT_SECRET=your_secure_secret_here
 BACKEND_PORT=5000
 FRONTEND_URL=http://localhost:3000
 NODE_ENV=development
@@ -42,6 +42,7 @@ NODE_ENV=development
 Create `.env.local` in the root directory:
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_AUTH_TOKEN_KEY=dotback_admin_token
 API_URL=http://localhost:5000
 ```
 

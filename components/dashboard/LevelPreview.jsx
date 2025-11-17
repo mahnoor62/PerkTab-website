@@ -18,7 +18,16 @@ function getLogoUrl(logoUrl) {
   // If it's a relative path starting with /uploads/, prepend backend URL
   if (logoUrl.startsWith("/uploads/")) {
     // Use the same backend URL as API calls
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL;
+    const rawBackendUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+    if (!rawBackendUrl) {
+      console.warn(
+        "[LevelPreview] NEXT_PUBLIC_API_URL is not defined. Logos from uploads cannot be displayed."
+      );
+      return logoUrl;
+    }
+    const backendUrl = rawBackendUrl.endsWith("/")
+      ? rawBackendUrl.slice(0, -1)
+      : rawBackendUrl;
     // Ensure no double slashes
     const cleanUrl = logoUrl.startsWith("/") ? logoUrl : `/${logoUrl}`;
     return `${backendUrl}${cleanUrl}`;

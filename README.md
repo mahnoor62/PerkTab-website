@@ -55,13 +55,14 @@ See `QUICK_START.md` for detailed setup instructions.
 **Frontend (`.env.local` in root):**
 ```
 NEXT_PUBLIC_API_URL=http://localhost:3000
+NEXT_PUBLIC_AUTH_TOKEN_KEY=dotback_admin_token
 API_URL=http://localhost:3000
 ```
 
 **Backend (`backend/.env`):**
 ```
 MONGO_URL=mongodb://127.0.0.1:27017/DotBack
-JWT_SECRET=change_me_to_a_secure_secret
+JWT_SECRET=your_secure_secret_here
 BACKEND_PORT=3000
 FRONTEND_URL=http://localhost:3000
 NODE_ENV=development

@@ -24,6 +24,7 @@ Should see: `{"status":"ok"}`
 **Check `.env.local` exists in root directory:**
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_AUTH_TOKEN_KEY=dotback_admin_token
 API_URL=http://localhost:5000
 ```
 
@@ -88,6 +89,7 @@ Ready on http://localhost:3000
 - Verify `.env.local` exists in root
 - Restart Next.js dev server after creating `.env.local`
 - Check `NEXT_PUBLIC_API_URL=http://localhost:5000`
+- Ensure `NEXT_PUBLIC_AUTH_TOKEN_KEY` is defined
 
 ### Issue: CORS errors
 **Solution:**
