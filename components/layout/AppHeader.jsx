@@ -53,7 +53,7 @@ export default function AppHeader({ adminEmail, onLogout }) {
           </Box>
           <Box>
             <Typography variant="h6" fontWeight={700}>
-              DotBack
+              PerkTap
             </Typography>
             {/* <Typography
               variant="body2"
