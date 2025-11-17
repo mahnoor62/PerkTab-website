@@ -1,0 +1,408 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Container,
+  LinearProgress,
+  Paper,
+  Snackbar,
+  Stack,
+  Typography,
+} from "@mui/material";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import AppHeader from "@/components/layout/AppHeader";
+import LevelList from "@/components/dashboard/LevelList";
+import LevelEditor from "@/components/dashboard/LevelEditor";
+import LevelPreview from "@/components/dashboard/LevelPreview";
+import NewLevelDialog from "@/components/dashboard/NewLevelDialog";
+
+const initialAlertState = {
+  open: false,
+  severity: "success",
+  message: "",
+};
+
+import { fetchJson, uploadFile } from "@/lib/api";
+
+export default function Dashboard({ initialLevels = [], adminEmail }) {
+  const [levels, setLevels] = useState(initialLevels);
+  const [selectedLevel, setSelectedLevel] = useState(
+    initialLevels[0]?.level ?? null
+  );
+  const [isLoadingLevels, setIsLoadingLevels] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [alertState, setAlertState] = useState(initialAlertState);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [isCreatingLevel, setIsCreatingLevel] = useState(false);
+
+  const selectedLevelData = useMemo(
+    () => levels.find((item) => item.level === selectedLevel),
+    [levels, selectedLevel]
+  );
+
+  useEffect(() => {
+    async function loadLevels() {
+      setIsLoadingLevels(true);
+      try {
+        const data = await fetchJson("/api/levels");
+        setLevels(data.levels);
+        setSelectedLevel((prev) => {
+          if (data.levels.length === 0) {
+            return null;
+          }
+          if (prev != null && data.levels.some((lvl) => lvl.level === prev)) {
+            return prev;
+          }
+          return data.levels[0]?.level ?? null;
+        });
+      } catch (error) {
+        setAlertState({
+          open: true,
+          severity: "error",
+          message:
+            error.message ||
+            "Unable to fetch levels. Please refresh and try again.",
+        });
+      } finally {
+        setIsLoadingLevels(false);
+      }
+    }
+
+    // Refresh levels after mount to ensure freshest data
+    loadLevels();
+  }, []);
+
+  const handleSelectLevel = (levelNumber) => {
+    setSelectedLevel(levelNumber);
+  };
+
+  const handleSaveLevel = async (payload, showNotification = false) => {
+    if (!selectedLevelData) return;
+
+    setIsSaving(true);
+    try {
+      const data = await fetchJson(`/api/levels/${selectedLevelData.level}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+
+      setLevels((prev) =>
+        prev.map((level) =>
+          level.level === data.level.level ? data.level : level
+        )
+      );
+
+      if (showNotification) {
+        setAlertState({
+          open: true,
+          severity: "success",
+          message: `Level ${selectedLevelData.level} saved successfully.`,
+        });
+      }
+    } catch (error) {
+      setAlertState({
+        open: true,
+        severity: "error",
+        message: error.message || "Unable to save level configuration.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleUploadLogo = async (file) => {
+    setIsUploadingLogo(true);
+    try {
+      const data = await uploadFile(file);
+      setAlertState({
+        open: true,
+        severity: "success",
+        message: "Logo uploaded successfully.",
+      });
+      return data.url;
+    } catch (error) {
+      setAlertState({
+        open: true,
+        severity: "error",
+        message: error.message || "Logo upload failed.",
+      });
+      return null;
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
+
+  const handleCreateLevel = async (payload) => {
+    setIsCreatingLevel(true);
+    try {
+      const data = await fetchJson("/api/levels", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      setLevels((prev) =>
+        [...prev, data.level].sort((a, b) => a.level - b.level)
+      );
+      setSelectedLevel(data.level.level);
+      setAlertState({
+        open: true,
+        severity: "success",
+        message: `Level ${data.level.level} created successfully.`,
+      });
+
+      return data.level;
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsCreatingLevel(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetchJson("/api/auth/logout", { method: "POST" });
+    } finally {
+      window.location.href = "/login";
+    }
+  };
+
+  return (
+    <Box
+      sx={{
+        minHeight: "100vh",
+        pb: 6,
+        position: "relative",
+        background: "#0a0a0a",
+        "&::before": {
+          content: '""',
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `
+            radial-gradient(circle at 20% 20%, rgba(52, 152, 219, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 80% 30%, rgba(155, 89, 182, 0.2) 0%, transparent 50%),
+            radial-gradient(circle at 30% 80%, rgba(26, 188, 156, 0.12) 0%, transparent 50%),
+            radial-gradient(circle at 70% 80%, rgba(155, 89, 182, 0.15) 0%, transparent 50%),
+            linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%)
+          `,
+          zIndex: 0,
+          pointerEvents: "none",
+        },
+      }}
+    >
+      <Box sx={{ position: "relative", zIndex: 1 }}>
+        <AppHeader adminEmail={adminEmail} onLogout={handleLogout} />
+
+        {isLoadingLevels ? (
+          <LinearProgress sx={{ position: "sticky", top: 0, zIndex: 2 }} />
+        ) : null}
+
+        <Container maxWidth="xl" sx={{ mt: 6 }}>
+        <Stack spacing={4}>
+          <Stack spacing={1}>
+            <Typography variant="h3" fontWeight={700} sx={{ color: "#ffffff" }}>
+              Level Operations Control
+            </Typography>
+            <Typography variant="body1" sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
+              Manage the color system, dot palette, and branding for every DotBack level.
+              Updates are persisted instantly in MongoDB.
+            </Typography>
+          </Stack>
+
+          <Paper
+            elevation={0}
+            sx={{
+              borderRadius: 5,
+              p: { xs: 3, md: 4 },
+              background:
+                "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(46, 204, 113, 0.08), rgba(26, 188, 156, 0.1))",
+              border: "1px solid rgba(46, 204, 113, 0.3)",
+              boxShadow: "0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(46, 204, 113, 0.1), 0 0 40px rgba(46, 204, 113, 0.1)",
+              position: "relative",
+              overflow: "hidden",
+              "&::before": {
+                content: '""',
+                position: "absolute",
+                top: -50,
+                right: -50,
+                width: 200,
+                height: 200,
+                borderRadius: "50%",
+                background: "radial-gradient(circle, rgba(46, 204, 113, 0.15), transparent)",
+                filter: "blur(40px)",
+                pointerEvents: "none",
+              },
+            }}
+          >
+            <Stack spacing={3}>
+              <Stack
+                direction={{ xs: "column", md: "row" }}
+                justifyContent="space-between"
+                alignItems={{ xs: "flex-start", md: "center" }}
+                spacing={2}
+              >
+                <Stack spacing={1}>
+                  <Typography variant="h5" fontWeight={700} sx={{ color: "#ffffff" }}>
+                    Active Level
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
+                    Adjust configuration parameters, preview the results, and launch the updated branding in minutes.
+                  </Typography>
+                </Stack>
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <Chip
+                    label={
+                      selectedLevelData
+                        ? `Editing Level ${selectedLevelData.level}`
+                        : "No level selected"
+                    }
+                    color={selectedLevelData ? "primary" : "default"}
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: 16,
+                      px: 2,
+                      py: 2,
+                      borderRadius: 999,
+                      backgroundColor: selectedLevelData
+                        ? undefined
+                        : "rgba(12,37,66,0.08)",
+                    }}
+                  />
+                  <Button
+                    variant="contained"
+                    size="large"
+                    startIcon={<AddRoundedIcon />}
+                    onClick={() => setCreateDialogOpen(true)}
+                    sx={{
+                      borderRadius: 3,
+                      background: "linear-gradient(135deg, #2ecc71, #27ae60)",
+                      boxShadow:
+                        "0 8px 24px rgba(46, 204, 113, 0.4), 0 0 0 1px rgba(46, 204, 113, 0.2)",
+                      "&:hover": {
+                        background: "linear-gradient(135deg, #27ae60, #229954)",
+                        boxShadow:
+                          "0 12px 32px rgba(46, 204, 113, 0.6), 0 0 0 1px rgba(46, 204, 113, 0.3)",
+                      },
+                    }}
+                  >
+                    Add Level
+                  </Button>
+                </Stack>
+              </Stack>
+
+              <Box
+                sx={{
+                  display: "grid",
+                  gap: 4,
+                  alignItems: "stretch",
+                  gridTemplateColumns: {
+                    xs: "1fr",
+                    lg: "minmax(260px, 320px) 1fr",
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    height: "calc(100vh - 220px)",
+                    minHeight: "760px",
+                    overflowY: "auto",
+                    overflowX: "hidden",
+                    pr: 1,
+                    pt: 2,
+                    pb: 2,
+                    "&::-webkit-scrollbar": {
+                      width: "8px",
+                    },
+                    "&::-webkit-scrollbar-track": {
+                      background: "rgba(26, 26, 26, 0.5)",
+                      borderRadius: "4px",
+                    },
+                    "&::-webkit-scrollbar-thumb": {
+                      background: "rgba(46, 204, 113, 0.4)",
+                      borderRadius: "4px",
+                      "&:hover": {
+                        background: "rgba(46, 204, 113, 0.6)",
+                      },
+                    },
+                  }}
+                >
+                  <LevelList
+                    levels={levels}
+                    selectedLevel={selectedLevel}
+                    onSelectLevel={handleSelectLevel}
+                    onAddClick={() => setCreateDialogOpen(true)}
+                  />
+                </Box>
+                <Card
+                  elevation={0}
+                  sx={{
+                    borderRadius: 4,
+                    background:
+                      "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(46, 204, 113, 0.08), rgba(26, 188, 156, 0.1))",
+                    border: "1px solid rgba(46, 204, 113, 0.3)",
+                    boxShadow: "0 20px 45px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(46, 204, 113, 0.1)",
+                  }}
+                >
+                  <CardContent
+                    sx={{
+                      p: { xs: 3, md: 4 },
+                      display: "grid",
+                      gap: 4,
+                      alignItems: "start",
+                      gridTemplateColumns: {
+                        xs: "1fr",
+                        md: "1fr 1fr",
+                      },
+                    }}
+                  >
+                    <LevelEditor
+                      level={selectedLevelData}
+                      onSave={handleSaveLevel}
+                      isSaving={isSaving}
+                      isUploadingLogo={isUploadingLogo}
+                      onUploadLogo={handleUploadLogo}
+                    />
+                    <LevelPreview level={selectedLevelData} />
+                  </CardContent>
+                </Card>
+              </Box>
+            </Stack>
+          </Paper>
+        </Stack>
+      </Container>
+      </Box>
+
+      <Snackbar
+        open={alertState.open}
+        autoHideDuration={4000}
+        onClose={() => setAlertState(initialAlertState)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setAlertState(initialAlertState)}
+          severity={alertState.severity}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {alertState.message}
+        </Alert>
+      </Snackbar>
+      <NewLevelDialog
+        open={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
+        onCreate={handleCreateLevel}
+        isSubmitting={isCreatingLevel}
+      />
+    </Box>
+  );
+}
+
