@@ -28,7 +28,7 @@ const initialAlertState = {
   message: "",
 };
 
-import { fetchJson, uploadFile } from "@/lib/api";
+import { fetchJson, uploadFile, removeAuthToken } from "@/lib/api";
 
 export default function Dashboard({ initialLevels = [], adminEmail }) {
   const [levels, setLevels] = useState(initialLevels);
@@ -168,7 +168,10 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
   const handleLogout = async () => {
     try {
       await fetchJson("/api/auth/logout", { method: "POST" });
+    } catch (error) {
+      console.warn("Logout request failed:", error);
     } finally {
+      removeAuthToken();
       window.location.href = "/login";
     }
   };
