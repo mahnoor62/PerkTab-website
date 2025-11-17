@@ -179,9 +179,15 @@ export default function LevelList({
                   >
                     Background
                   </Typography>
-                  <Typography variant="subtitle1" fontWeight={700} sx={{ color: "#ffffff" }}>
-                    {level.backgroundColor || "No background set"}
-                  </Typography>
+                  {level.backgroundColor ? (
+                    <Box sx={{ mt: 0.5 }}>
+                      <DotPreview colors={[level.backgroundColor]} />
+                    </Box>
+                  ) : (
+                    <Typography variant="subtitle1" fontWeight={700} sx={{ color: "#ffffff" }}>
+                      No background set
+                    </Typography>
+                  )}
                 </Box>
 
                 <Box>
