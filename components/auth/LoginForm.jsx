@@ -44,19 +44,30 @@ export default function LoginForm() {
       const response = await loginRequest(formValues);
       // Store JWT token in localStorage
       if (response.token) {
+        console.log("[Login] Received token from server, storing...");
         setAuthToken(response.token);
-        console.log("[Login] Token stored successfully");
+        
+        // Wait a moment to ensure storage is complete
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        
         // Verify token was stored
         const storedToken = getAuthToken();
-        if (storedToken) {
-          console.log("[Login] Token verification: stored and retrieved");
+        if (storedToken && storedToken === response.token.trim()) {
+          console.log("[Login] Token verification: stored and retrieved successfully");
         } else {
-          console.error("[Login] Token verification: failed to retrieve token!");
+          console.error("[Login] Token verification: failed to retrieve token!", {
+            expectedLength: response.token.trim().length,
+            retrievedLength: storedToken?.length || 0,
+            tokensMatch: storedToken === response.token.trim(),
+          });
+          // Still proceed, but log the issue
         }
       } else {
         console.error("[Login] No token in response:", response);
+        throw new Error("No authentication token received from server");
       }
       // Redirect to dashboard
+      console.log("[Login] Redirecting to dashboard...");
       window.location.href = "/";
     } catch (err) {
       // Show user-friendly error message

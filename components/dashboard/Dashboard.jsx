@@ -28,7 +28,7 @@ const initialAlertState = {
   message: "",
 };
 
-import { fetchJson, uploadFile, removeAuthToken } from "@/lib/api";
+import { fetchJson, uploadFile, removeAuthToken, getAuthToken } from "@/lib/api";
 
 export default function Dashboard({ initialLevels = [], adminEmail }) {
   const MAX_LEVELS = 10;
@@ -53,10 +53,12 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
     async function loadLevels() {
       setIsLoadingLevels(true);
       try {
+        console.log("[Dashboard] Loading levels...");
         const data = await fetchJson("/api/levels");
-        setLevels(data.levels);
+        console.log("[Dashboard] Levels loaded:", data?.levels?.length || 0);
+        setLevels(data.levels || []);
         setSelectedLevel((prev) => {
-          if (data.levels.length === 0) {
+          if (!data.levels || data.levels.length === 0) {
             return null;
           }
           if (prev != null && data.levels.some((lvl) => lvl.level === prev)) {
@@ -65,6 +67,11 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
           return data.levels[0]?.level ?? null;
         });
       } catch (error) {
+        console.error("[Dashboard] Error loading levels:", error);
+        console.error("[Dashboard] Error details:", {
+          status: error.status,
+          message: error.message,
+        });
         setAlertState({
           open: true,
           severity: "error",
@@ -169,11 +176,27 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
 
   const handleLogout = async () => {
     try {
+      console.log("[Logout] Initiating logout...");
       await fetchJson("/api/auth/logout", { method: "POST" });
+      console.log("[Logout] Logout API call successful");
     } catch (error) {
-      console.warn("Logout request failed:", error);
+      console.warn("[Logout] Logout request failed:", error);
     } finally {
+      console.log("[Logout] Removing token from storage...");
       removeAuthToken();
+      // Verify token is removed
+      const tokenAfterRemove = localStorage.getItem(
+        process.env.NEXT_PUBLIC_AUTH_TOKEN_KEY || "dotback_admin_token"
+      );
+      if (tokenAfterRemove) {
+        console.error("[Logout] WARNING: Token still exists after removal!");
+        // Force clear
+        localStorage.removeItem(
+          process.env.NEXT_PUBLIC_AUTH_TOKEN_KEY || "dotback_admin_token"
+        );
+      } else {
+        console.log("[Logout] Token successfully removed");
+      }
       window.location.href = "/login";
     }
   };

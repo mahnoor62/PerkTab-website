@@ -36,24 +36,16 @@ export default function Home() {
           return;
         }
 
-        // Fetch admin session and levels in parallel for faster loading
-        const [sessionResponse, levelsResponse] = await Promise.all([
-          fetchJson("/api/auth/session").catch((err) => {
-            console.error("Session error:", err);
-            // If session fails, token might be invalid
-            if (err.status === 401) {
-              removeAuthToken();
-            }
-            throw err;
-          }),
-          fetchJson("/api/levels").catch((err) => {
-            console.error("Levels error:", err);
-            // Return empty array if levels fail, but don't block the page
-            return { levels: [] };
-          })
-        ]);
-
-        if (!isMounted) return;
+        // First verify session, then fetch levels
+        // This ensures token is valid before making levels request
+        const sessionResponse = await fetchJson("/api/auth/session").catch((err) => {
+          console.error("Session error:", err);
+          // If session fails, token might be invalid
+          if (err.status === 401) {
+            removeAuthToken();
+          }
+          throw err;
+        });
 
         // Check if authenticated
         if (!sessionResponse.authenticated || !sessionResponse.admin) {
@@ -63,8 +55,34 @@ export default function Home() {
           return;
         }
 
+        // Now fetch levels after session is confirmed
+        let levelsResponse;
+        try {
+          levelsResponse = await fetchJson("/api/levels");
+          console.log("[Levels] Successfully fetched levels:", levelsResponse?.levels?.length || 0);
+        } catch (err) {
+          console.error("Levels API error:", err);
+          console.error("Levels API error details:", {
+            status: err.status,
+            message: err.message,
+            tokenPresent: !!getAuthToken(),
+          });
+          // If it's an auth error, remove token and redirect
+          if (err.status === 401) {
+            removeAuthToken();
+            setLoading(false);
+            router.push("/login");
+            return;
+          }
+          // For other errors, still try to load with empty array
+          levelsResponse = { levels: [] };
+        }
+
+        if (!isMounted) return;
+
         setAdmin(sessionResponse.admin);
-        setLevels(levelsResponse.levels || []);
+        setLevels(levelsResponse?.levels || []);
+        setLoading(false);
       } catch (error) {
         if (!isMounted) return;
         
