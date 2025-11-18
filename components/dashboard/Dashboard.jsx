@@ -89,9 +89,8 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
           message: errorMessage,
         });
         
-        // Don't set empty array - let the error be visible
-        // Only set empty if we want to show "No levels" state
-        setLevels([]);
+        // DO NOT set empty array when error occurs - let error be visible
+        // Keep existing levels state (don't clear it)
       } finally {
         setIsLoadingLevels(false);
       }

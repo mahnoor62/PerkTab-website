@@ -123,8 +123,7 @@ export default function Home() {
         setError(errorMessage);
         setLoading(false);
         
-        // Also set empty levels array so dashboard can still render (but will show error)
-        setLevels([]);
+        // DO NOT set empty levels array - let error be visible
       } finally {
         // Always set loading to false, even if we're redirecting
         if (isMounted) {
@@ -163,8 +162,8 @@ export default function Home() {
     );
   }
 
-  // Show error if not redirecting
-  if (error && !admin) {
+  // Always show error if error exists
+  if (error) {
     return (
       <Box
         sx={{
