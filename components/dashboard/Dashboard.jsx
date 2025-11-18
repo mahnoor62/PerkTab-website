@@ -55,7 +55,7 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
       try {
         console.log("[Dashboard] Loading levels...");
         const data = await fetchJson("/api/levels");
-        console.log("[Dashboard] Levels loaded:", data?.levels?.length || 0);
+        console.log("[Dashboard] Levels loaded:", data?.levels?.length);
         
         if (!data || !data.levels) {
           throw new Error("Invalid response from levels API: missing levels array");

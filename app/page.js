@@ -61,6 +61,7 @@ export default function Home() {
           console.error("Levels API error details:", {
             status: err.status,
             message: err.message,
+            responseData: err.responseData,
             tokenPresent: !!getAuthToken(),
             error: err,
           });
@@ -75,12 +76,33 @@ export default function Home() {
           throw err;
         });
         
-        console.log("[Levels] Successfully fetched levels:", levelsResponse?.levels?.length || 0);
+        console.log("[Levels] API response:", levelsResponse);
+        console.log("[Levels] Levels array:", levelsResponse?.levels);
+        console.log("[Levels] Levels count:", levelsResponse?.levels?.length || 0);
+
+        // Validate response structure
+        if (!levelsResponse || typeof levelsResponse !== "object") {
+          throw new Error("Invalid response from levels API: Response is not an object");
+        }
+
+        if (!Array.isArray(levelsResponse.levels)) {
+          throw new Error(`Invalid response from levels API: levels is not an array (got ${typeof levelsResponse.levels})`);
+        }
+
+        // If empty array is returned, log warning but don't throw error (empty array is valid)
+        if (levelsResponse.levels.length === 0) {
+          console.warn("[Levels] WARNING: API returned empty array!");
+          console.warn("[Levels] This might indicate:");
+          console.warn("  - No levels exist in database");
+          console.warn("  - Database connection issue");
+          console.warn("  - Wrong database being queried");
+          console.warn("  - Check backend logs for more details");
+        }
 
         if (!isMounted) return;
 
         setAdmin(sessionResponse.admin);
-        setLevels(levelsResponse?.levels || []);
+        setLevels(levelsResponse.levels);
         setLoading(false);
       } catch (error) {
         if (!isMounted) return;
