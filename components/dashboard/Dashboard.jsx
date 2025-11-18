@@ -56,6 +56,11 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
         console.log("[Dashboard] Loading levels...");
         const data = await fetchJson("/api/levels");
         console.log("[Dashboard] Levels loaded:", data?.levels?.length || 0);
+        
+        if (!data || !data.levels) {
+          throw new Error("Invalid response from levels API: missing levels array");
+        }
+        
         setLevels(data.levels || []);
         setSelectedLevel((prev) => {
           if (!data.levels || data.levels.length === 0) {
@@ -68,17 +73,25 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
         });
       } catch (error) {
         console.error("[Dashboard] Error loading levels:", error);
+        console.error("[Dashboard] Full error object:", error);
         console.error("[Dashboard] Error details:", {
           status: error.status,
           message: error.message,
+          errorType: error.constructor.name,
+          stack: error.stack,
         });
+        
+        // Show the actual error message, not a generic one
+        const errorMessage = error.message || error.toString() || "Unable to fetch levels. Please refresh and try again.";
         setAlertState({
           open: true,
           severity: "error",
-          message:
-            error.message ||
-            "Unable to fetch levels. Please refresh and try again.",
+          message: errorMessage,
         });
+        
+        // Don't set empty array - let the error be visible
+        // Only set empty if we want to show "No levels" state
+        setLevels([]);
       } finally {
         setIsLoadingLevels(false);
       }

@@ -56,27 +56,26 @@ export default function Home() {
         }
 
         // Now fetch levels after session is confirmed
-        let levelsResponse;
-        try {
-          levelsResponse = await fetchJson("/api/levels");
-          console.log("[Levels] Successfully fetched levels:", levelsResponse?.levels?.length || 0);
-        } catch (err) {
+        const levelsResponse = await fetchJson("/api/levels").catch((err) => {
           console.error("Levels API error:", err);
           console.error("Levels API error details:", {
             status: err.status,
             message: err.message,
             tokenPresent: !!getAuthToken(),
+            error: err,
           });
           // If it's an auth error, remove token and redirect
           if (err.status === 401) {
             removeAuthToken();
             setLoading(false);
             router.push("/login");
-            return;
+            throw err;
           }
-          // For other errors, still try to load with empty array
-          levelsResponse = { levels: [] };
-        }
+          // For other errors, throw the error instead of returning empty array
+          throw err;
+        });
+        
+        console.log("[Levels] Successfully fetched levels:", levelsResponse?.levels?.length || 0);
 
         if (!isMounted) return;
 
@@ -87,7 +86,8 @@ export default function Home() {
         if (!isMounted) return;
         
         console.error("Error loading data:", error);
-        setError(error.message || "Failed to load data");
+        console.error("Full error object:", error);
+        
         // If it's an auth error, redirect to login
         if (error.status === 401 || error.message?.includes("Unauthorized")) {
           removeAuthToken();
@@ -95,8 +95,14 @@ export default function Home() {
           router.push("/login");
           return;
         }
-        // For other errors, show error but don't redirect
+        
+        // Show the actual error message to user
+        const errorMessage = error.message || error.toString() || "Failed to load data";
+        setError(errorMessage);
         setLoading(false);
+        
+        // Also set empty levels array so dashboard can still render (but will show error)
+        setLevels([]);
       } finally {
         // Always set loading to false, even if we're redirecting
         if (isMounted) {
