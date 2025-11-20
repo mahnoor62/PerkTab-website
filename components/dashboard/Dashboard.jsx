@@ -32,11 +32,9 @@ import { fetchJson, uploadFile, removeAuthToken, getAuthToken } from "@/lib/api"
 
 export default function Dashboard({ initialLevels = [], adminEmail }) {
   const MAX_LEVELS = 10;
-  const [levels, setLevels] = useState(initialLevels);
-  const [selectedLevel, setSelectedLevel] = useState(
-    initialLevels[0]?.level ?? null
-  );
-  const [isLoadingLevels, setIsLoadingLevels] = useState(false);
+  const [levels, setLevels] = useState([]);
+  const [selectedLevel, setSelectedLevel] = useState(null);
+  const [isLoadingLevels, setIsLoadingLevels] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [alertState, setAlertState] = useState(initialAlertState);
@@ -53,50 +51,38 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
     async function loadLevels() {
       setIsLoadingLevels(true);
       try {
-        console.log("[Dashboard] Loading levels...");
         const data = await fetchJson("/api/levels");
-        console.log("[Dashboard] Levels loaded:", data?.levels?.length);
         
-        if (!data || !data.levels) {
+        if (!data || !data.levels || !Array.isArray(data.levels)) {
           throw new Error("Invalid response from levels API: missing levels array");
         }
         
-        setLevels(data.levels || []);
+        // Always use fresh data from database (ignore initialLevels prop)
+        setLevels(data.levels);
         setSelectedLevel((prev) => {
-          if (!data.levels || data.levels.length === 0) {
+          if (data.levels.length === 0) {
             return null;
           }
+          // Keep selected level if it exists in new data
           if (prev != null && data.levels.some((lvl) => lvl.level === prev)) {
             return prev;
           }
+          // Otherwise select first level
           return data.levels[0]?.level ?? null;
         });
       } catch (error) {
         console.error("[Dashboard] Error loading levels:", error);
-        console.error("[Dashboard] Full error object:", error);
-        console.error("[Dashboard] Error details:", {
-          status: error.status,
-          message: error.message,
-          errorType: error.constructor.name,
-          stack: error.stack,
-        });
-        
-        // Show the actual error message, not a generic one
-        const errorMessage = error.message || error.toString() || "Unable to fetch levels. Please refresh and try again.";
         setAlertState({
           open: true,
           severity: "error",
-          message: errorMessage,
+          message: error.message || "Unable to fetch levels. Please refresh and try again.",
         });
-        
-        // DO NOT set empty array when error occurs - let error be visible
-        // Keep existing levels state (don't clear it)
       } finally {
         setIsLoadingLevels(false);
       }
     }
 
-    // Refresh levels after mount to ensure freshest data
+    // Always fetch fresh data from database on mount
     loadLevels();
   }, []);
 

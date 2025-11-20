@@ -70,7 +70,8 @@ export default function Home() {
         }
 
         setAdmin(sessionResponse.admin);
-        setLevels(levelsResponse.levels || []);
+        // Don't set levels here - Dashboard will fetch fresh data itself
+        setLevels([]);
       } catch (error) {
         if (!isMounted) return;
         
