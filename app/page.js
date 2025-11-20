@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircularProgress, Box } from "@mui/material";
 import Dashboard from "@/components/dashboard/Dashboard";
+import ErrorDisplay from "@/components/error/ErrorDisplay";
 import { getAuthToken, removeAuthToken } from "@/lib/api";
 import { fetchJson } from "@/lib/api";
 
@@ -16,13 +17,18 @@ export default function Home() {
 
   useEffect(() => {
     let isMounted = true;
-    const timeoutId = setTimeout(() => {
-      if (isMounted && loading) {
-        console.warn("Loading timeout - taking too long");
-        setError("Request is taking too long. Please check your connection.");
-        setLoading(false);
-      }
-    }, 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => {
+        if (isMounted && loading) {
+          console.warn("Loading timeout - taking too long");
+          setError({
+            message: "Request is taking too long. Please check your connection.",
+            status: null,
+            response: null,
+            data: null,
+          });
+          setLoading(false);
+        }
+      }, 10000); // 10 second timeout
 
     async function loadData() {
       try {
@@ -69,9 +75,25 @@ export default function Home() {
         if (!isMounted) return;
         
         console.error("Error loading data:", error);
-        setError(error.message || "Failed to load data");
+        console.error("Error details:", {
+          message: error.message,
+          status: error.status,
+          response: error.response,
+          stack: error.stack,
+        });
+        
+        // Create error object for display
+        const errorObj = {
+          message: error.message || "Failed to load data",
+          status: error.status || error.response?.status || null,
+          response: error.response || null,
+          data: error.response?.data || error.data || null,
+        };
+        
+        setError(errorObj);
+        
         // If it's an auth error, redirect to login
-        if (error.status === 401 || error.message?.includes("Unauthorized")) {
+        if (error.status === 401 || error.response?.status === 401 || error.message?.includes("Unauthorized")) {
           removeAuthToken();
           setLoading(false);
           router.push("/login");
@@ -120,39 +142,15 @@ export default function Home() {
   // Show error if not redirecting
   if (error && !admin) {
     return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#0a0a0a",
-          gap: 2,
-          p: 4,
+      <ErrorDisplay
+        error={error}
+        onRetry={() => {
+          setError(null);
+          setLoading(true);
+          window.location.reload();
         }}
-      >
-        <Box sx={{ color: "#e74c3c", fontSize: "16px", textAlign: "center" }}>
-          {error}
-        </Box>
-        <button
-          onClick={() => {
-            setError(null);
-            setLoading(true);
-            window.location.reload();
-          }}
-          style={{
-            padding: "10px 20px",
-            background: "#2ecc71",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
-        >
-          Retry
-        </button>
-      </Box>
+        title="Failed to Load Dashboard"
+      />
     );
   }
 

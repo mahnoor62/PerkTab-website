@@ -197,15 +197,16 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
       console.log("[Logout] Removing token from storage...");
       removeAuthToken();
       // Verify token is removed
-      const tokenAfterRemove = localStorage.getItem(
-        process.env.NEXT_PUBLIC_AUTH_TOKEN_KEY || "dotback_admin_token"
-      );
+      const tokenStorageKey = process.env.NEXT_PUBLIC_AUTH_TOKEN_KEY;
+      if (!tokenStorageKey) {
+        console.error("[Logout] ERROR: NEXT_PUBLIC_AUTH_TOKEN_KEY is not defined in environment variables!");
+        return;
+      }
+      const tokenAfterRemove = localStorage.getItem(tokenStorageKey);
       if (tokenAfterRemove) {
         console.error("[Logout] WARNING: Token still exists after removal!");
         // Force clear
-        localStorage.removeItem(
-          process.env.NEXT_PUBLIC_AUTH_TOKEN_KEY || "dotback_admin_token"
-        );
+        localStorage.removeItem(tokenStorageKey);
       } else {
         console.log("[Logout] Token successfully removed");
       }
