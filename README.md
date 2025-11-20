@@ -52,38 +52,20 @@ See `QUICK_START.md` for detailed setup instructions.
 
 ### Environment Variables
 
-**Frontend (`.env.local` in root for local development):**
-```env
-NEXT_PUBLIC_API_URL=http://localhost:5000
+**Frontend (`.env.local` in root):**
+```
+NEXT_PUBLIC_API_URL=http://localhost:3000
 NEXT_PUBLIC_AUTH_TOKEN_KEY=dotback_admin_token
+API_URL=http://localhost:3000
 ```
 
-**For Production Deployment (Vercel):**
-Set these environment variables in Vercel Dashboard → Settings → Environment Variables:
-```env
-NEXT_PUBLIC_API_URL=https://perktab-backend.tecshield.net
-NEXT_PUBLIC_AUTH_TOKEN_KEY=dotback_admin_token
+**Backend (`backend/.env`):**
 ```
-
-📖 **See [VERCEL_ENV_SETUP.md](./VERCEL_ENV_SETUP.md) for detailed production setup instructions.**
-
-**Backend (`backend/.env` for local development):**
-```env
 MONGO_URL=mongodb://127.0.0.1:27017/DotBack
 JWT_SECRET=your_secure_secret_here
-BACKEND_PORT=5000
+BACKEND_PORT=3000
 FRONTEND_URL=http://localhost:3000
 NODE_ENV=development
-```
-
-**For Production Backend:**
-```env
-MONGO_URL=your_production_mongodb_connection_string
-JWT_SECRET=your_secure_secret_here
-BACKEND_PORT=5000
-FRONTEND_URL=https://perk-tab-website.vercel.app
-NODE_ENV=production
-ALLOWED_ORIGINS=https://perk-tab-website.vercel.app
 ```
 
 ### Default Admin Credentials
@@ -103,21 +85,6 @@ Uploaded logos are stored in `backend/uploads/` and served by the backend server
 - `npm run build` – Create production build
 - `npm start` – Run production server
 - `npm run lint` – Run Next.js / ESLint checks
-
-### Production Deployment
-
-**Important**: Before deploying to Vercel, ensure environment variables are configured:
-
-1. **Set Environment Variables in Vercel:**
-   - Go to Vercel Dashboard → Your Project → Settings → Environment Variables
-   - Add `NEXT_PUBLIC_API_URL` pointing to your production backend (e.g., `https://perktab-backend.tecshield.net`)
-   - Add `NEXT_PUBLIC_AUTH_TOKEN_KEY` (e.g., `dotback_admin_token`)
-
-2. **Redeploy** after setting environment variables (they only apply to new deployments)
-
-3. **Verify** configuration by checking browser console for `[API] Configuration` log
-
-📖 **See [VERCEL_ENV_SETUP.md](./VERCEL_ENV_SETUP.md) for complete production setup guide.**
 
 ### Notes
 
