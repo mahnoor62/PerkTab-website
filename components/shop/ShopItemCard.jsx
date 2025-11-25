@@ -40,6 +40,9 @@ export default function ShopItemCard({
   const [editRedeemCodes, setEditRedeemCodes] = useState(item.redeemCodes || []);
   const [redeemCodeInput, setRedeemCodeInput] = useState("");
   const [redeemDialogOpen, setRedeemDialogOpen] = useState(false);
+  const [editValidity, setEditValidity] = useState(
+    item.validity ? new Date(item.validity).toISOString().slice(0, 16) : ""
+  );
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -73,6 +76,7 @@ export default function ShopItemCard({
         coins: coinsNumber,
         imageUrl: imageUrl,
         redeemCodes: editRedeemCodes,
+        validity: editValidity || null,
       });
 
       setEditDialogOpen(false);
@@ -115,6 +119,7 @@ export default function ShopItemCard({
     setEditDescription(item.description);
     setEditCoins(String(item.coins || 0));
     setEditImageUrl(item.imageUrl);
+    setEditValidity(item.validity ? new Date(item.validity).toISOString().slice(0, 16) : "");
     setRedeemCodeInput("");
     setRedeemDialogOpen(false);
   }, [item]);
@@ -307,6 +312,17 @@ export default function ShopItemCard({
             </Box>
           )}
 
+          {item.validity && (
+            <Box sx={{ px: 1.5, pb: 1 }}>
+              <Typography
+                variant="caption"
+                sx={{ color: "#666666", fontSize: "0.65rem", fontWeight: 600 }}
+              >
+                Validity: {new Date(item.validity).toLocaleString()}
+              </Typography>
+            </Box>
+          )}
+
           {totalRedeemCodes > 0 && (
             <Box sx={{ px: 1.5, pb: 1, display: "flex", flexDirection: "column", gap: 0.5 }}>
               <Typography
@@ -395,6 +411,7 @@ export default function ShopItemCard({
           setEditDescription(item.description);
           setEditCoins(String(item.coins || 0));
           setEditImageUrl(item.imageUrl);
+          setEditValidity(item.validity ? new Date(item.validity).toISOString().slice(0, 16) : "");
           setImageFile(null);
           setPreviewUrl(null);
         }}
@@ -461,6 +478,28 @@ export default function ShopItemCard({
               }}
               fullWidth
               required
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  color: "#ffffff",
+                  "& fieldset": {
+                    borderColor: "rgba(255, 255, 255, 0.3)",
+                  },
+                },
+                "& .MuiInputLabel-root": {
+                  color: "rgba(255, 255, 255, 0.7)",
+                },
+              }}
+            />
+
+            <TextField
+              label="Validity (Expiry Date)"
+              type="datetime-local"
+              value={editValidity}
+              onChange={(e) => setEditValidity(e.target.value)}
+              fullWidth
+              InputLabelProps={{
+                shrink: true,
+              }}
               sx={{
                 "& .MuiOutlinedInput-root": {
                   color: "#ffffff",
@@ -608,6 +647,7 @@ export default function ShopItemCard({
               setEditDescription(item.description);
               setEditCoins(String(item.coins || 0));
               setEditImageUrl(item.imageUrl);
+              setEditValidity(item.validity ? new Date(item.validity).toISOString().slice(0, 16) : "");
               setImageFile(null);
               setPreviewUrl(null);
               setEditRedeemCodes(item.redeemCodes || []);

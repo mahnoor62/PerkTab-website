@@ -28,6 +28,7 @@ export default function AddItemDialog({
   const [previewUrl, setPreviewUrl] = useState(null);
   const [redeemCodes, setRedeemCodes] = useState([]);
   const [redeemCodeInput, setRedeemCodeInput] = useState("");
+  const [validity, setValidity] = useState("");
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -90,6 +91,7 @@ export default function AddItemDialog({
         coins: coinsNumber,
         imageUrl: imageUrl || "",
         redeemCodes,
+        validity: validity || null,
       });
 
       // Only clear form and close dialog if creation succeeded
@@ -100,6 +102,7 @@ export default function AddItemDialog({
       setPreviewUrl(null);
       setRedeemCodes([]);
       setRedeemCodeInput("");
+      setValidity("");
       onClose();
     } catch (error) {
       console.error("Error creating item:", error);
@@ -117,6 +120,7 @@ export default function AddItemDialog({
     setPreviewUrl(null);
     setRedeemCodes([]);
     setRedeemCodeInput("");
+    setValidity("");
     onClose();
   };
 
@@ -210,6 +214,28 @@ export default function AddItemDialog({
             }}
             fullWidth
             required
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                color: "#ffffff",
+                "& fieldset": {
+                  borderColor: "rgba(255, 255, 255, 0.3)",
+                },
+              },
+              "& .MuiInputLabel-root": {
+                color: "rgba(255, 255, 255, 0.7)",
+              },
+            }}
+          />
+
+          <TextField
+            label="Validity (Expiry Date)"
+            type="datetime-local"
+            value={validity}
+            onChange={(e) => setValidity(e.target.value)}
+            fullWidth
+            InputLabelProps={{
+              shrink: true,
+            }}
             sx={{
               "& .MuiOutlinedInput-root": {
                 color: "#ffffff",
