@@ -1,41 +1,7 @@
 "use client";
 
-import {
-  Box,
-  Stack,
-  Typography,
-} from "@mui/material";
-
-// Get backend URL for serving uploaded files
-function getLogoUrl(logoUrl) {
-  if (!logoUrl) return null;
-  
-  // If it's already a full URL, return as is
-  if (logoUrl.startsWith("http://") || logoUrl.startsWith("https://")) {
-    return logoUrl;
-  }
-  
-  // If it's a relative path starting with /uploads/, prepend backend URL
-  if (logoUrl.startsWith("/uploads/")) {
-    // Use the same backend URL as API calls
-    const rawBackendUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
-    if (!rawBackendUrl) {
-      console.warn(
-        "[LevelPreview] NEXT_PUBLIC_API_URL is not defined. Logos from uploads cannot be displayed."
-      );
-      return logoUrl;
-    }
-    const backendUrl = rawBackendUrl.endsWith("/")
-      ? rawBackendUrl.slice(0, -1)
-      : rawBackendUrl;
-    // Ensure no double slashes
-    const cleanUrl = logoUrl.startsWith("/") ? logoUrl : `/${logoUrl}`;
-    return `${backendUrl}${cleanUrl}`;
-  }
-  
-  // Return as is for other relative paths
-  return logoUrl;
-}
+import { Box, Stack, Typography } from "@mui/material";
+import { getLogoUrl } from "@/lib/logo";
 
 export default function LevelPreview({ level }) {
   if (!level) {

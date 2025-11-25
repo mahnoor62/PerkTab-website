@@ -3,6 +3,7 @@
 import {
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -11,8 +12,10 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { getLogoUrl } from "@/lib/logo";
 
 const defaultFormState = {
   level: "",
@@ -30,9 +33,13 @@ export default function NewLevelDialog({
   onClose,
   onCreate,
   isSubmitting,
+  onUploadLogo,
+  isUploadingLogo = false,
 }) {
   const [formValues, setFormValues] = useState(defaultFormState);
   const [error, setError] = useState(null);
+  const fileInputRef = useRef(null);
+  const previewLogoUrl = getLogoUrl(formValues.logoUrl);
 
   const resetAndClose = () => {
     setFormValues(defaultFormState);
@@ -43,6 +50,24 @@ export default function NewLevelDialog({
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file || !onUploadLogo) {
+      return;
+    }
+
+    try {
+      const uploadedUrl = await onUploadLogo(file);
+      if (uploadedUrl) {
+        setFormValues((prev) => ({ ...prev, logoUrl: uploadedUrl }));
+      }
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -170,7 +195,7 @@ export default function NewLevelDialog({
           />
 
           <Typography variant="subtitle2" sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
-            Optional: seed the level with your preferred palette now, or adjust
+            Optional: configure the level with your preferred palette now, or adjust
             after creation.
           </Typography>
 
@@ -386,41 +411,87 @@ export default function NewLevelDialog({
                 },
               }}
             />
-            <TextField
-              label="Logo URL"
-              name="logoUrl"
-              value={formValues.logoUrl}
-              onChange={handleChange}
-              placeholder="Optional initial logo URL"
-              InputProps={{
-                sx: {
-                  color: "#ffffff",
-                  "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
-                },
-              }}
-              InputLabelProps={{
-                sx: {
-                  color: "rgba(255, 255, 255, 0.7)",
-                  "&.Mui-focused": {
-                    color: "#2ecc71",
-                  },
-                },
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  "& fieldset": {
-                    borderColor: "rgba(46, 204, 113, 0.3)",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "rgba(46, 204, 113, 0.5)",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#2ecc71",
-                  },
+          </Stack>
+
+          <Stack spacing={1.5}>
+            <Typography variant="subtitle2" sx={{ color: "rgba(255, 255, 255, 0.8)" }}>
+              Logo (optional)
+            </Typography>
+
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "stretch", sm: "center" }}>
+              <Box
+                sx={{
+                  flex: 1,
+                  minHeight: 120,
+                  borderRadius: 3,
+                  border: "1px dashed rgba(46, 204, 113, 0.4)",
                   backgroundColor: "rgba(26, 26, 26, 0.5)",
-                },
-              }}
-            />
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "hidden",
+                  position: "relative",
+                }}
+              >
+                {previewLogoUrl ? (
+                  <Box
+                    component="img"
+                    src={previewLogoUrl}
+                    alt="Uploaded logo preview"
+                    sx={{
+                      maxWidth: "100%",
+                      maxHeight: "100%",
+                      objectFit: "contain",
+                    }}
+                  />
+                ) : (
+                  <Typography sx={{ color: "rgba(255, 255, 255, 0.6)" }}>
+                    No logo uploaded yet
+                  </Typography>
+                )}
+              </Box>
+
+              <Box>
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                />
+                <Button
+                  variant="outlined"
+                  startIcon={
+                    isUploadingLogo ? (
+                      <CircularProgress size={18} />
+                    ) : (
+                      <CloudUploadIcon />
+                    )
+                  }
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingLogo || !onUploadLogo}
+                  sx={{
+                    px: 4,
+                    py: 1.2,
+                    borderRadius: 3,
+                    borderColor: "rgba(46, 204, 113, 0.5)",
+                    backgroundColor: "rgba(46, 204, 113, 0.1)",
+                    color: "#2ecc71",
+                    whiteSpace: "nowrap",
+                    "&:hover": {
+                      borderColor: "#2ecc71",
+                      backgroundColor: "rgba(46, 204, 113, 0.2)",
+                    },
+                    "&:disabled": {
+                      color: "rgba(255, 255, 255, 0.5)",
+                      borderColor: "rgba(255, 255, 255, 0.2)",
+                    },
+                  }}
+                >
+                  {formValues.logoUrl ? "Replace Logo" : "Upload Logo"}
+                </Button>
+              </Box>
+            </Stack>
           </Stack>
 
           {error ? (

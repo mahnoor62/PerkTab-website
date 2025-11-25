@@ -471,9 +471,11 @@ const initialAlertState = {
   message: "",
 };
 
-export default function Dashboard({ adminEmail }) {
-  const [levels, setLevels] = useState([]);
-  const [selectedLevel, setSelectedLevel] = useState(null);
+export default function Dashboard({ initialLevels = [], adminEmail }) {
+  const [levels, setLevels] = useState(initialLevels);
+  const [selectedLevel, setSelectedLevel] = useState(
+    initialLevels[0]?.level ?? null
+  );
 
   const [isLoadingLevels, setIsLoadingLevels] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -899,6 +901,8 @@ export default function Dashboard({ adminEmail }) {
         onClose={() => setCreateDialogOpen(false)}
         onCreate={handleCreateLevel}
         isSubmitting={isCreatingLevel}
+        onUploadLogo={handleUploadLogo}
+        isUploadingLogo={isUploadingLogo}
       />
     </Box>
   );
