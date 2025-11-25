@@ -9,6 +9,8 @@ import {
   DialogContent,
   DialogTitle,
   TextField,
+  Chip,
+  Typography,
 } from "@mui/material";
 
 export default function AddItemDialog({
@@ -24,6 +26,8 @@ export default function AddItemDialog({
   const [coins, setCoins] = useState("0");
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [redeemCodes, setRedeemCodes] = useState([]);
+  const [redeemCodeInput, setRedeemCodeInput] = useState("");
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -85,6 +89,7 @@ export default function AddItemDialog({
         description: description.trim(),
         coins: coinsNumber,
         imageUrl: imageUrl || "",
+        redeemCodes,
       });
 
       // Only clear form and close dialog if creation succeeded
@@ -93,6 +98,8 @@ export default function AddItemDialog({
       setCoins("0");
       setImageFile(null);
       setPreviewUrl(null);
+      setRedeemCodes([]);
+      setRedeemCodeInput("");
       onClose();
     } catch (error) {
       console.error("Error creating item:", error);
@@ -108,7 +115,31 @@ export default function AddItemDialog({
     setCoins("0");
     setImageFile(null);
     setPreviewUrl(null);
+    setRedeemCodes([]);
+    setRedeemCodeInput("");
     onClose();
+  };
+
+  const handleAddRedeemCode = () => {
+    const trimmed = redeemCodeInput.trim();
+    if (!trimmed) return;
+    if (redeemCodes.includes(trimmed)) {
+      setRedeemCodeInput("");
+      return;
+    }
+    setRedeemCodes(prev => [...prev, trimmed]);
+    setRedeemCodeInput("");
+  };
+
+  const handleRemoveRedeemCode = (code) => {
+    setRedeemCodes(prev => prev.filter(c => c !== code));
+  };
+
+  const handleRedeemCodeKeyDown = (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      handleAddRedeemCode();
+    }
   };
 
   return (
@@ -240,6 +271,86 @@ export default function AddItemDialog({
                   }}
                 />
               </Box>
+            )}
+          </Box>
+
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+            <Typography variant="subtitle2" sx={{ color: "rgba(255, 255, 255, 0.9)" }}>
+              Redeem Codes ({redeemCodes.length})
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1, flexDirection: { xs: "column", sm: "row" } }}>
+              <TextField
+                label="Add Redeem Code"
+                value={redeemCodeInput}
+                onChange={(e) => setRedeemCodeInput(e.target.value)}
+                onKeyDown={handleRedeemCodeKeyDown}
+                fullWidth
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    color: "#ffffff",
+                    "& fieldset": {
+                      borderColor: "rgba(255, 255, 255, 0.3)",
+                    },
+                  },
+                  "& .MuiInputLabel-root": {
+                    color: "rgba(255, 255, 255, 0.7)",
+                  },
+                }}
+              />
+              <Button
+                variant="outlined"
+                onClick={handleAddRedeemCode}
+                sx={{
+                  minWidth: { xs: "100%", sm: "auto" },
+                  borderColor: "rgba(255, 255, 255, 0.3)",
+                  color: "rgba(255, 255, 255, 0.9)",
+                  "&:hover": {
+                    borderColor: "#2ecc71",
+                    backgroundColor: "rgba(46, 204, 113, 0.15)",
+                  },
+                }}
+              >
+                Add
+              </Button>
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 1,
+                minHeight: 32,
+              }}
+            >
+              {redeemCodes.length === 0 ? (
+                <Typography
+                  variant="body2"
+                  sx={{ color: "rgba(255, 255, 255, 0.5)" }}
+                >
+                  No redeem codes added yet.
+                </Typography>
+              ) : (
+                redeemCodes.map(code => (
+                  <Chip
+                    key={code}
+                    label={code}
+                    onDelete={() => handleRemoveRedeemCode(code)}
+                    sx={{
+                      backgroundColor: "rgba(46, 204, 113, 0.15)",
+                      color: "#2ecc71",
+                      borderColor: "rgba(46, 204, 113, 0.4)",
+                    }}
+                    variant="outlined"
+                  />
+                ))
+              )}
+            </Box>
+            {redeemCodes.length > 0 && (
+              <Typography
+                variant="caption"
+                sx={{ color: "rgba(255, 255, 255, 0.6)" }}
+              >
+                Total codes added: {redeemCodes.length}
+              </Typography>
             )}
           </Box>
         </Box>

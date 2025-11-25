@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Box,
   Button,
@@ -15,6 +15,7 @@ import {
   IconButton,
   TextField,
   Typography,
+  Stack,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -36,6 +37,9 @@ export default function ShopItemCard({
   const [isDeleting, setIsDeleting] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [editRedeemCodes, setEditRedeemCodes] = useState(item.redeemCodes || []);
+  const [redeemCodeInput, setRedeemCodeInput] = useState("");
+  const [redeemDialogOpen, setRedeemDialogOpen] = useState(false);
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -68,11 +72,13 @@ export default function ShopItemCard({
         description: editDescription,
         coins: coinsNumber,
         imageUrl: imageUrl,
+        redeemCodes: editRedeemCodes,
       });
 
       setEditDialogOpen(false);
       setImageFile(null);
       setPreviewUrl(null);
+      setRedeemCodeInput("");
     } catch (error) {
       console.error("Error updating item:", error);
     } finally {
@@ -102,6 +108,40 @@ export default function ShopItemCard({
     }
     return url;
   }, [item.imageUrl, item.name]);
+
+  useEffect(() => {
+    setEditRedeemCodes(item.redeemCodes || []);
+    setEditName(item.name);
+    setEditDescription(item.description);
+    setEditCoins(String(item.coins || 0));
+    setEditImageUrl(item.imageUrl);
+    setRedeemCodeInput("");
+    setRedeemDialogOpen(false);
+  }, [item]);
+
+  const handleAddRedeemCode = () => {
+    const trimmed = redeemCodeInput.trim();
+    if (!trimmed) return;
+    if (editRedeemCodes.includes(trimmed)) {
+      setRedeemCodeInput("");
+      return;
+    }
+    setEditRedeemCodes(prev => [...prev, trimmed]);
+    setRedeemCodeInput("");
+  };
+
+  const handleRemoveRedeemCode = (code) => {
+    setEditRedeemCodes(prev => prev.filter(c => c !== code));
+  };
+
+  const handleRedeemCodeKeyDown = (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      handleAddRedeemCode();
+    }
+  };
+
+  const totalRedeemCodes = item.redeemCodeCount ?? (Array.isArray(item.redeemCodes) ? item.redeemCodes.length : 0);
 
   return (
     <>
@@ -267,6 +307,56 @@ export default function ShopItemCard({
             </Box>
           )}
 
+          {totalRedeemCodes > 0 && (
+            <Box sx={{ px: 1.5, pb: 1, display: "flex", flexDirection: "column", gap: 0.5 }}>
+              <Typography
+                variant="caption"
+                sx={{ color: "#333333", fontWeight: 600, textTransform: "uppercase" }}
+              >
+                Redeem Codes ({totalRedeemCodes})
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 0.5,
+                  justifyContent: "center",
+                }}
+              >
+                {(item.redeemCodes || []).slice(0, 3).map(code => (
+                  <Chip
+                    key={code}
+                    label={code}
+                    size="small"
+                    sx={{
+                      backgroundColor: "rgba(46, 204, 113, 0.15)",
+                      color: "#1b5e20",
+                      borderColor: "rgba(46, 204, 113, 0.3)",
+                    }}
+                    variant="outlined"
+                  />
+                ))}
+                {Array.isArray(item.redeemCodes) && item.redeemCodes.length > 3 && (
+                  <Button
+                    size="small"
+                    variant="text"
+                    onClick={() => setRedeemDialogOpen(true)}
+                    sx={{
+                      textTransform: "none",
+                      fontSize: "0.75rem",
+                      fontWeight: 600,
+                      color: "#1b5e20",
+                      px: 1,
+                      minWidth: "auto",
+                    }}
+                  >
+                    View all
+                  </Button>
+                )}
+              </Box>
+            </Box>
+          )}
+
           <Button
             fullWidth
             variant="contained"
@@ -428,6 +518,86 @@ export default function ShopItemCard({
                 </Box>
               )}
             </Box>
+
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+              <Typography variant="subtitle2" sx={{ color: "rgba(255, 255, 255, 0.9)" }}>
+                Redeem Codes ({editRedeemCodes.length})
+              </Typography>
+              <Box sx={{ display: "flex", gap: 1, flexDirection: { xs: "column", sm: "row" } }}>
+                <TextField
+                  label="Add Redeem Code"
+                  value={redeemCodeInput}
+                  onChange={(e) => setRedeemCodeInput(e.target.value)}
+                  onKeyDown={handleRedeemCodeKeyDown}
+                  fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      color: "#ffffff",
+                      "& fieldset": {
+                        borderColor: "rgba(255, 255, 255, 0.3)",
+                      },
+                    },
+                    "& .MuiInputLabel-root": {
+                      color: "rgba(255, 255, 255, 0.7)",
+                    },
+                  }}
+                />
+                <Button
+                  variant="outlined"
+                  onClick={handleAddRedeemCode}
+                  sx={{
+                    minWidth: { xs: "100%", sm: "auto" },
+                    borderColor: "rgba(255, 255, 255, 0.3)",
+                    color: "rgba(255, 255, 255, 0.9)",
+                    "&:hover": {
+                      borderColor: "#2ecc71",
+                      backgroundColor: "rgba(46, 204, 113, 0.15)",
+                    },
+                  }}
+                >
+                  Add
+                </Button>
+              </Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 1,
+                  minHeight: 32,
+                }}
+              >
+                {editRedeemCodes.length === 0 ? (
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "rgba(255, 255, 255, 0.5)" }}
+                  >
+                    No redeem codes added yet.
+                  </Typography>
+                ) : (
+                  editRedeemCodes.map(code => (
+                    <Chip
+                      key={code}
+                      label={code}
+                      onDelete={() => handleRemoveRedeemCode(code)}
+                      sx={{
+                        backgroundColor: "rgba(46, 204, 113, 0.15)",
+                        color: "#2ecc71",
+                        borderColor: "rgba(46, 204, 113, 0.4)",
+                      }}
+                      variant="outlined"
+                    />
+                  ))
+                )}
+              </Box>
+              {editRedeemCodes.length > 0 && (
+                <Typography
+                  variant="caption"
+                  sx={{ color: "rgba(255, 255, 255, 0.6)" }}
+                >
+                  Total codes added: {editRedeemCodes.length}
+                </Typography>
+              )}
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
@@ -440,6 +610,9 @@ export default function ShopItemCard({
               setEditImageUrl(item.imageUrl);
               setImageFile(null);
               setPreviewUrl(null);
+              setEditRedeemCodes(item.redeemCodes || []);
+              setRedeemCodeInput("");
+              setRedeemDialogOpen(false);
             }}
             sx={{ color: "rgba(255, 255, 255, 0.7)" }}
           >
@@ -516,6 +689,62 @@ export default function ShopItemCard({
             }}
           >
             {isDeleting ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={redeemDialogOpen}
+        onClose={() => setRedeemDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            background:
+              "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(46, 204, 113, 0.08))",
+            border: "1px solid rgba(46, 204, 113, 0.3)",
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: "#ffffff" }}>
+          Redeem Codes — {item.name}
+        </DialogTitle>
+        <DialogContent>
+          <Stack spacing={1.5} sx={{ pt: 1 }}>
+            {Array.isArray(item.redeemCodes) && item.redeemCodes.length > 0 ? (
+              item.redeemCodes.map(code => (
+                <Box
+                  key={code}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    border: "1px solid rgba(46, 204, 113, 0.4)",
+                    borderRadius: 1,
+                    px: 2,
+                    py: 1,
+                    backgroundColor: "rgba(46, 204, 113, 0.08)",
+                    color: "#ffffff",
+                    fontWeight: 600,
+                    fontSize: "0.95rem",
+                  }}
+                >
+                  <span>{code}</span>
+                </Box>
+              ))
+            ) : (
+              <Typography sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
+                No redeem codes available for this item.
+              </Typography>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button
+            onClick={() => setRedeemDialogOpen(false)}
+            sx={{ color: "rgba(255, 255, 255, 0.8)" }}
+          >
+            Close
           </Button>
         </DialogActions>
       </Dialog>
