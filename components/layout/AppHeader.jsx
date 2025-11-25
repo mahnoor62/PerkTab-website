@@ -4,6 +4,7 @@ import {
   AppBar,
   Avatar,
   Box,
+  Button,
   IconButton,
   Stack,
   Toolbar,
@@ -11,7 +12,13 @@ import {
   Typography,
 } from "@mui/material";
 import LogoutIcon from "@mui/icons-material/Logout";
+import ShopIcon from "@mui/icons-material/Store";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import { useRouter, usePathname } from "next/navigation";
+
 export default function AppHeader({ adminEmail, onLogout }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const initials =
     adminEmail?.charAt(0)?.toUpperCase() ?? "A";
 
@@ -55,17 +62,40 @@ export default function AppHeader({ adminEmail, onLogout }) {
             <Typography variant="h6" fontWeight={700}>
               PerkTap
             </Typography>
-            {/* <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ opacity: 0.8 }}
-            >
-              Crystal-grade control over your 10 levels
-            </Typography> */}
           </Box>
         </Stack>
 
         <Stack direction="row" spacing={1} alignItems="center">
+          {pathname !== "/" && (
+            <Button
+              startIcon={<DashboardIcon />}
+              onClick={() => router.push("/")}
+              variant="text"
+              sx={{
+                color: "rgba(255, 255, 255, 0.7)",
+                "&:hover": {
+                  backgroundColor: "rgba(46, 204, 113, 0.1)",
+                },
+              }}
+            >
+              Dashboard
+            </Button>
+          )}
+          {pathname !== "/shop" && (
+            <Button
+              startIcon={<ShopIcon />}
+              onClick={() => router.push("/shop")}
+              variant="text"
+              sx={{
+                color: "rgba(255, 255, 255, 0.7)",
+                "&:hover": {
+                  backgroundColor: "rgba(46, 204, 113, 0.1)",
+                },
+              }}
+            >
+              Shop
+            </Button>
+          )}
           <Tooltip title={adminEmail}>
             <Avatar
               sx={{
