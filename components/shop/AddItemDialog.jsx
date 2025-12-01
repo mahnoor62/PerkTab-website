@@ -29,10 +29,26 @@ export default function AddItemDialog({
   const [redeemCodes, setRedeemCodes] = useState([]);
   const [redeemCodeInput, setRedeemCodeInput] = useState("");
   const [validity, setValidity] = useState("");
+  const [imageError, setImageError] = useState(null);
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     if (file) {
+      const fileType = file.type.toLowerCase();
+      const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+      const validExtensions = ['.png', '.jpg', '.jpeg'];
+      const fileName = file.name.toLowerCase();
+      
+      const isValidType = validTypes.includes(fileType) || 
+                         validExtensions.some(ext => fileName.endsWith(ext));
+      
+      if (!isValidType) {
+        setImageError('Please upload only PNG or JPG images.');
+        event.target.value = '';
+        return;
+      }
+      
+      setImageError(null);
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -103,6 +119,7 @@ export default function AddItemDialog({
       setRedeemCodes([]);
       setRedeemCodeInput("");
       setValidity("");
+      setImageError(null);
       onClose();
     } catch (error) {
       console.error("Error creating item:", error);
@@ -121,6 +138,7 @@ export default function AddItemDialog({
     setRedeemCodes([]);
     setRedeemCodeInput("");
     setValidity("");
+    setImageError(null);
     onClose();
   };
 
@@ -272,11 +290,27 @@ export default function AddItemDialog({
               <input
                 type="file"
                 hidden
-                accept="image/*"
+                accept="image/png,image/jpeg,image/jpg"
                 onChange={handleImageChange}
                 disabled={isUploadingImage}
               />
             </Button>
+
+            {imageError && (
+              <Typography
+                variant="body2"
+                sx={{
+                  mt: 1,
+                  color: "#ff5252",
+                  backgroundColor: "rgba(255, 82, 82, 0.1)",
+                  padding: 1.5,
+                  borderRadius: 2,
+                  border: "1px solid rgba(255, 82, 82, 0.3)",
+                }}
+              >
+                {imageError}
+              </Typography>
+            )}
 
             {previewUrl && (
               <Box

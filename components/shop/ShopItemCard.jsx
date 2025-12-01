@@ -43,10 +43,26 @@ export default function ShopItemCard({
   const [editValidity, setEditValidity] = useState(
     item.validity ? new Date(item.validity).toISOString().slice(0, 16) : ""
   );
+  const [imageError, setImageError] = useState(null);
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     if (file) {
+      const fileType = file.type.toLowerCase();
+      const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+      const validExtensions = ['.png', '.jpg', '.jpeg'];
+      const fileName = file.name.toLowerCase();
+      
+      const isValidType = validTypes.includes(fileType) || 
+                         validExtensions.some(ext => fileName.endsWith(ext));
+      
+      if (!isValidType) {
+        setImageError('Please upload only PNG or JPG images.');
+        event.target.value = '';
+        return;
+      }
+      
+      setImageError(null);
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -83,6 +99,7 @@ export default function ShopItemCard({
       setImageFile(null);
       setPreviewUrl(null);
       setRedeemCodeInput("");
+      setImageError(null);
     } catch (error) {
       console.error("Error updating item:", error);
     } finally {
@@ -414,6 +431,7 @@ export default function ShopItemCard({
           setEditValidity(item.validity ? new Date(item.validity).toISOString().slice(0, 16) : "");
           setImageFile(null);
           setPreviewUrl(null);
+          setImageError(null);
         }}
         maxWidth="sm"
         fullWidth
@@ -531,10 +549,26 @@ export default function ShopItemCard({
                 <input
                   type="file"
                   hidden
-                  accept="image/*"
+                  accept="image/png,image/jpeg,image/jpg"
                   onChange={handleImageChange}
                 />
               </Button>
+
+              {imageError && (
+                <Typography
+                  variant="body2"
+                  sx={{
+                    mt: 1,
+                    color: "#ff5252",
+                    backgroundColor: "rgba(255, 82, 82, 0.1)",
+                    padding: 1.5,
+                    borderRadius: 2,
+                    border: "1px solid rgba(255, 82, 82, 0.3)",
+                  }}
+                >
+                  {imageError}
+                </Typography>
+              )}
 
               {(previewUrl || imageUrl) && (
                 <Box
@@ -653,6 +687,7 @@ export default function ShopItemCard({
               setEditRedeemCodes(item.redeemCodes || []);
               setRedeemCodeInput("");
               setRedeemDialogOpen(false);
+              setImageError(null);
             }}
             sx={{ color: "rgba(255, 255, 255, 0.7)" }}
           >

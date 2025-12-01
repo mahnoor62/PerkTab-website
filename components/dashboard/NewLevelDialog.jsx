@@ -38,12 +38,14 @@ export default function NewLevelDialog({
 }) {
   const [formValues, setFormValues] = useState(defaultFormState);
   const [error, setError] = useState(null);
+  const [imageError, setImageError] = useState(null);
   const fileInputRef = useRef(null);
   const previewLogoUrl = getLogoUrl(formValues.logoUrl);
 
   const resetAndClose = () => {
     setFormValues(defaultFormState);
     setError(null);
+    setImageError(null);
     onClose?.();
   };
 
@@ -58,6 +60,23 @@ export default function NewLevelDialog({
       return;
     }
 
+    const fileType = file.type.toLowerCase();
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    const validExtensions = ['.png', '.jpg', '.jpeg'];
+    const fileName = file.name.toLowerCase();
+    
+    const isValidType = validTypes.includes(fileType) || 
+                       validExtensions.some(ext => fileName.endsWith(ext));
+    
+    if (!isValidType) {
+      setImageError('Please upload only PNG or JPG images.');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+
+    setImageError(null);
     try {
       const uploadedUrl = await onUploadLogo(file);
       if (uploadedUrl) {
@@ -454,7 +473,7 @@ export default function NewLevelDialog({
               <Box>
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/png,image/jpeg,image/jpg"
                   hidden
                   ref={fileInputRef}
                   onChange={handleFileChange}
@@ -492,6 +511,21 @@ export default function NewLevelDialog({
                 </Button>
               </Box>
             </Stack>
+            
+            {imageError && (
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "#ff5252",
+                  backgroundColor: "rgba(255, 82, 82, 0.1)",
+                  padding: 1.5,
+                  borderRadius: 2,
+                  border: "1px solid rgba(255, 82, 82, 0.3)",
+                }}
+              >
+                {imageError}
+              </Typography>
+            )}
           </Stack>
 
           {error ? (
