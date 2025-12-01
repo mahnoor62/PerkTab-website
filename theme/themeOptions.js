@@ -1,8 +1,8 @@
 const zenPalette = {
   primary: {
-    main: "#2ecc71", // L - lime green (play button)
-    light: "#58d68d",
-    dark: "#27ae60",
+    main: "#e9e224", // Yellow
+    light: "#f0e84a",
+    dark: "#d4c920",
     contrastText: "#000000",
   },
   secondary: {
@@ -27,9 +27,9 @@ const zenPalette = {
     dark: "#c0392b",
   },
   success: {
-    main: "#2ecc71", // L - lime green
-    light: "#58d68d",
-    dark: "#27ae60",
+    main: "#e9e224", // Yellow
+    light: "#f0e84a",
+    dark: "#d4c920",
   },
   background: {
     default: "#0a0a0a", // very dark charcoal/black
@@ -43,7 +43,7 @@ const zenPalette = {
   zen: {
     red: "#e74c3c", // C
     orange: "#f39c12", // O
-    lime: "#2ecc71", // L
+    lime: "#e9e224", // Yellow
     cyan: "#1abc9c", // O
     teal: "#008080", // R - darker blue/teal
     purple: "#9b59b6", // purple/magenta circles
@@ -86,10 +86,10 @@ export function getDesignTokens() {
         styleOverrides: {
           root: {
             backgroundImage:
-              "linear-gradient(135deg, rgba(46, 204, 113, 0.12), rgba(26, 188, 156, 0.15), rgba(155, 89, 182, 0.1))",
+              "linear-gradient(135deg, rgba(233, 226, 36, 0.12), rgba(26, 188, 156, 0.15), rgba(155, 89, 182, 0.1))",
             backdropFilter: "blur(24px)",
-            border: "1px solid rgba(46, 204, 113, 0.25)",
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(46, 204, 113, 0.1)",
+            border: "1px solid rgba(233, 226, 36, 0.25)",
+            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(233, 226, 36, 0.1)",
           },
         },
       },
@@ -100,15 +100,15 @@ export function getDesignTokens() {
             fontWeight: 700,
             letterSpacing: 0.3,
             textTransform: "none",
-            boxShadow: "0 4px 20px rgba(46, 204, 113, 0.3)",
+            boxShadow: "0 4px 20px rgba(233, 226, 36, 0.3)",
             "&:hover": {
-              boxShadow: "0 6px 28px rgba(46, 204, 113, 0.5)",
+              boxShadow: "0 6px 28px rgba(233, 226, 36, 0.5)",
             },
           },
           contained: {
-            background: "linear-gradient(135deg, #2ecc71, #27ae60)",
+            background: "linear-gradient(135deg, #e9e224, #d4c920)",
             "&:hover": {
-              background: "linear-gradient(135deg, #27ae60, #229954)",
+              background: "linear-gradient(135deg, #d4c920, #bfb01c)",
             },
           },
         },
@@ -118,9 +118,9 @@ export function getDesignTokens() {
           root: {
             borderRadius: 999,
             fontWeight: 600,
-            background: "rgba(46, 204, 113, 0.15)",
-            border: "1px solid rgba(46, 204, 113, 0.3)",
-            color: "#2ecc71",
+            background: "rgba(233, 226, 36, 0.15)",
+            border: "1px solid rgba(233, 226, 36, 0.3)",
+            color: "#e9e224",
           },
         },
       },
@@ -129,13 +129,13 @@ export function getDesignTokens() {
           root: {
             "& .MuiOutlinedInput-root": {
               "& fieldset": {
-                borderColor: "rgba(46, 204, 113, 0.3)",
+                borderColor: "rgba(233, 226, 36, 0.3)",
               },
               "&:hover fieldset": {
-                borderColor: "rgba(46, 204, 113, 0.5)",
+                borderColor: "rgba(233, 226, 36, 0.5)",
               },
               "&.Mui-focused fieldset": {
-                borderColor: "#2ecc71",
+                borderColor: "#e9e224",
                 borderWidth: 2,
               },
             },

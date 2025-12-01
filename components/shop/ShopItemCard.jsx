@@ -173,7 +173,7 @@ export default function ShopItemCard({
         sx={{
           borderRadius: 2,
           backgroundColor: "#fafafa",
-          border: "1px solid #2ecc71",
+          border: "1px solid #e9e224",
           display: "flex",
           flexDirection: "column",
           height: "100%",
@@ -185,7 +185,7 @@ export default function ShopItemCard({
           transition: "transform 0.2s, box-shadow 0.2s",
           "&:hover": {
             transform: "translateY(-4px)",
-            boxShadow: "0 8px 16px rgba(46, 204, 113, 0.2)",
+            boxShadow: "0 8px 16px rgba(233, 226, 36, 0.2)",
             "& .edit-delete-buttons": {
               opacity: 1,
             },
@@ -210,7 +210,7 @@ export default function ShopItemCard({
             onClick={() => setEditDialogOpen(true)}
             sx={{
               backgroundColor: "#ffffff",
-              color: "#2ecc71",
+              color: "#e9e224",
               boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
               "&:hover": {
                 backgroundColor: "#f0f0f0",
@@ -362,9 +362,9 @@ export default function ShopItemCard({
                     label={code}
                     size="small"
                     sx={{
-                      backgroundColor: "rgba(46, 204, 113, 0.15)",
+                      backgroundColor: "rgba(233, 226, 36, 0.15)",
                       color: "#1b5e20",
-                      borderColor: "rgba(46, 204, 113, 0.3)",
+                      borderColor: "rgba(233, 226, 36, 0.3)",
                     }}
                     variant="outlined"
                   />
@@ -395,7 +395,7 @@ export default function ShopItemCard({
             variant="contained"
             sx={{
               borderRadius: 0,
-              backgroundColor: "#2ecc71",
+              backgroundColor: "#e9e224",
               color: "#000000",
               fontWeight: 700,
               fontSize: "0.875rem",
@@ -405,12 +405,12 @@ export default function ShopItemCard({
               mt: "auto",
               fontFamily: "sans-serif",
               "&:hover": {
-                backgroundColor: "#27ae60",
+                backgroundColor: "#d4c920",
                 boxShadow: "none",
               },
               "&.Mui-disabled": {
                 color: "#000000",
-                backgroundColor: "#2ecc71",
+                backgroundColor: "#e9e224",
               },
             }}
             disabled
@@ -437,8 +437,8 @@ export default function ShopItemCard({
         fullWidth
         PaperProps={{
           sx: {
-            background: "linear-gradient(135deg, rgba(26, 26, 26, 0.98), rgba(46, 204, 113, 0.05))",
-            border: "1px solid rgba(46, 204, 113, 0.3)",
+            background: "linear-gradient(135deg, rgba(26, 26, 26, 0.98), rgba(233, 226, 36, 0.05))",
+            border: "1px solid rgba(233, 226, 36, 0.3)",
           },
         }}
       >
@@ -540,8 +540,8 @@ export default function ShopItemCard({
                   borderColor: "rgba(255, 255, 255, 0.3)",
                   color: "rgba(255, 255, 255, 0.7)",
                   "&:hover": {
-                    borderColor: "#2ecc71",
-                    backgroundColor: "rgba(46, 204, 113, 0.1)",
+                    borderColor: "#e9e224",
+                    backgroundColor: "rgba(233, 226, 36, 0.1)",
                   },
                 }}
               >
@@ -623,8 +623,8 @@ export default function ShopItemCard({
                     borderColor: "rgba(255, 255, 255, 0.3)",
                     color: "rgba(255, 255, 255, 0.9)",
                     "&:hover": {
-                      borderColor: "#2ecc71",
-                      backgroundColor: "rgba(46, 204, 113, 0.15)",
+                      borderColor: "#e9e224",
+                      backgroundColor: "rgba(233, 226, 36, 0.15)",
                     },
                   }}
                 >
@@ -653,9 +653,9 @@ export default function ShopItemCard({
                       label={code}
                       onDelete={() => handleRemoveRedeemCode(code)}
                       sx={{
-                        backgroundColor: "rgba(46, 204, 113, 0.15)",
-                        color: "#2ecc71",
-                        borderColor: "rgba(46, 204, 113, 0.4)",
+                        backgroundColor: "rgba(233, 226, 36, 0.15)",
+                        color: "#e9e224",
+                        borderColor: "rgba(233, 226, 36, 0.4)",
                       }}
                       variant="outlined"
                     />
@@ -703,9 +703,9 @@ export default function ShopItemCard({
               isUpdating
             }
             sx={{
-              background: "linear-gradient(135deg, #2ecc71, #27ae60)",
+              background: "linear-gradient(135deg, #e9e224, #d4c920)",
               "&:hover": {
-                background: "linear-gradient(135deg, #27ae60, #229954)",
+                background: "linear-gradient(135deg, #d4c920, #bfb01c)",
               },
             }}
           >
@@ -776,8 +776,8 @@ export default function ShopItemCard({
         PaperProps={{
           sx: {
             background:
-              "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(46, 204, 113, 0.08))",
-            border: "1px solid rgba(46, 204, 113, 0.3)",
+              "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(233, 226, 36, 0.08))",
+            border: "1px solid rgba(233, 226, 36, 0.3)",
           },
         }}
       >
@@ -794,11 +794,11 @@ export default function ShopItemCard({
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    border: "1px solid rgba(46, 204, 113, 0.4)",
+                    border: "1px solid rgba(233, 226, 36, 0.4)",
                     borderRadius: 1,
                     px: 2,
                     py: 1,
-                    backgroundColor: "rgba(46, 204, 113, 0.08)",
+                    backgroundColor: "rgba(233, 226, 36, 0.08)",
                     color: "#ffffff",
                     fontWeight: 600,
                     fontSize: "0.95rem",

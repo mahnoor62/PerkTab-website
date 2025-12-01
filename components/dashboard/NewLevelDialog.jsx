@@ -88,8 +88,8 @@ function ColorSwatch({ color, onChange, fieldName }) {
           transition: "transform 0.2s, box-shadow 0.2s",
           "&:hover": {
             transform: "scale(1.1)",
-            boxShadow: "0 6px 15px rgba(46, 204, 113, 0.4)",
-            border: "1px solid rgba(46, 204, 113, 0.8)",
+            boxShadow: "0 6px 15px rgba(233, 226, 36, 0.4)",
+            border: "1px solid rgba(233, 226, 36, 0.8)",
           },
         }}
       />
@@ -109,7 +109,7 @@ function ColorSwatch({ color, onChange, fieldName }) {
           sx: {
             p: 2,
             backgroundColor: "rgba(26, 26, 26, 0.95)",
-            border: "1px solid rgba(46, 204, 113, 0.3)",
+            border: "1px solid rgba(233, 226, 36, 0.3)",
             borderRadius: 2,
           },
         }}
@@ -126,7 +126,7 @@ function ColorSwatch({ color, onChange, fieldName }) {
             sx={{
               width: 200,
               height: 50,
-              border: "1px solid rgba(46, 204, 113, 0.3)",
+              border: "1px solid rgba(233, 226, 36, 0.3)",
               borderRadius: 1,
               cursor: "pointer",
             }}
@@ -147,13 +147,13 @@ function ColorSwatch({ color, onChange, fieldName }) {
                 backgroundColor: "rgba(255,255,255,0.1)",
                 color: "#ffffff",
                 "& fieldset": {
-                  borderColor: "rgba(46, 204, 113, 0.3)",
+                  borderColor: "rgba(233, 226, 36, 0.3)",
                 },
                 "&:hover fieldset": {
-                  borderColor: "rgba(46, 204, 113, 0.5)",
+                  borderColor: "rgba(233, 226, 36, 0.5)",
                 },
                 "&.Mui-focused fieldset": {
-                  borderColor: "#2ecc71",
+                  borderColor: "#e9e224",
                 },
               },
               "& input": {
@@ -335,14 +335,14 @@ export default function NewLevelDialog({
         onSubmit: handleSubmit,
         sx: {
           borderRadius: 4,
-          boxShadow: "0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(46, 204, 113, 0.1), 0 0 40px rgba(46, 204, 113, 0.1)",
+          boxShadow: "0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(233, 226, 36, 0.1), 0 0 40px rgba(233, 226, 36, 0.1)",
           background:
-            "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(46, 204, 113, 0.08), rgba(26, 188, 156, 0.1))",
-          border: "1px solid rgba(46, 204, 113, 0.3)",
+            "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(233, 226, 36, 0.08), rgba(26, 188, 156, 0.1))",
+          border: "1px solid rgba(233, 226, 36, 0.3)",
         },
       }}
     >
-      <DialogTitle sx={{ pb: 2, borderBottom: "1px solid rgba(46, 204, 113, 0.2)" }}>
+      <DialogTitle sx={{ pb: 2, borderBottom: "1px solid rgba(233, 226, 36, 0.2)" }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flex: 1 }}>
             <Box
@@ -354,10 +354,10 @@ export default function NewLevelDialog({
                 alignItems: "center",
                 justifyContent: "center",
                 background:
-                  "linear-gradient(135deg, rgba(46, 204, 113, 0.3), rgba(26, 188, 156, 0.3))",
+                  "linear-gradient(135deg, rgba(233, 226, 36, 0.3), rgba(26, 188, 156, 0.3))",
                 color: "#ffffff",
-                border: "1px solid rgba(46, 204, 113, 0.4)",
-                boxShadow: "0 12px 24px rgba(46, 204, 113, 0.35)",
+                border: "1px solid rgba(233, 226, 36, 0.4)",
+                boxShadow: "0 12px 24px rgba(233, 226, 36, 0.35)",
               }}
             >
               <AddIcon />
@@ -376,15 +376,15 @@ export default function NewLevelDialog({
             onClick={handleDefaultColors}
             sx={{
               borderRadius: 2,
-              borderColor: "rgba(46, 204, 113, 0.5)",
-              backgroundColor: "rgba(46, 204, 113, 0.1)",
-              color: "#2ecc71",
+              borderColor: "rgba(233, 226, 36, 0.5)",
+              backgroundColor: "rgba(233, 226, 36, 0.1)",
+              color: "#e9e224",
               px: 2,
               py: 1,
               whiteSpace: "nowrap",
               "&:hover": {
-                borderColor: "#2ecc71",
-                backgroundColor: "rgba(46, 204, 113, 0.2)",
+                borderColor: "#e9e224",
+                backgroundColor: "rgba(233, 226, 36, 0.2)",
               },
             }}
           >
@@ -392,7 +392,7 @@ export default function NewLevelDialog({
           </Button>
         </Stack>
       </DialogTitle>
-      <DialogContent dividers sx={{ "&.MuiDialogContent-dividers": { borderColor: "rgba(46, 204, 113, 0.2)" } }}>
+      <DialogContent dividers sx={{ "&.MuiDialogContent-dividers": { borderColor: "rgba(233, 226, 36, 0.2)" } }}>
         <Stack spacing={2.5}>
           <TextField
             autoFocus
@@ -417,7 +417,7 @@ export default function NewLevelDialog({
               sx: {
                 color: "rgba(255, 255, 255, 0.7)",
                 "&.Mui-focused": {
-                  color: "#2ecc71",
+                  color: "#e9e224",
                 },
               },
             }}
@@ -429,13 +429,13 @@ export default function NewLevelDialog({
             sx={{
               "& .MuiOutlinedInput-root": {
                 "& fieldset": {
-                  borderColor: "rgba(46, 204, 113, 0.3)",
+                  borderColor: "rgba(233, 226, 36, 0.3)",
                 },
                 "&:hover fieldset": {
-                  borderColor: "rgba(46, 204, 113, 0.5)",
+                  borderColor: "rgba(233, 226, 36, 0.5)",
                 },
                 "&.Mui-focused fieldset": {
-                  borderColor: "#2ecc71",
+                  borderColor: "#e9e224",
                 },
                 backgroundColor: "rgba(26, 26, 26, 0.5)",
               },
@@ -466,27 +466,27 @@ export default function NewLevelDialog({
               sx: {
                 color: "rgba(255, 255, 255, 0.7)",
                 "&.Mui-focused": {
-                  color: "#2ecc71",
+                  color: "#e9e224",
                 },
               },
             }}
             sx={{
               "& .MuiOutlinedInput-root": {
                 "& fieldset": {
-                  borderColor: "rgba(46, 204, 113, 0.3)",
+                  borderColor: "rgba(233, 226, 36, 0.3)",
                 },
                 "&:hover fieldset": {
-                  borderColor: "rgba(46, 204, 113, 0.5)",
+                  borderColor: "rgba(233, 226, 36, 0.5)",
                 },
                 "&.Mui-focused fieldset": {
-                  borderColor: "#2ecc71",
+                  borderColor: "#e9e224",
                 },
                 backgroundColor: "rgba(26, 26, 26, 0.5)",
               },
             }}
           />
 
-          <Divider sx={{ borderColor: "rgba(46, 204, 113, 0.2)" }} />
+          <Divider sx={{ borderColor: "rgba(233, 226, 36, 0.2)" }} />
 
           <Stack spacing={2}>
             <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -499,12 +499,12 @@ export default function NewLevelDialog({
                 onClick={handleAddDot}
                 sx={{
                   borderRadius: 2,
-                  borderColor: "rgba(46, 204, 113, 0.5)",
-                  backgroundColor: "rgba(46, 204, 113, 0.1)",
-                  color: "#2ecc71",
+                  borderColor: "rgba(233, 226, 36, 0.5)",
+                  backgroundColor: "rgba(233, 226, 36, 0.1)",
+                  color: "#e9e224",
                   "&:hover": {
-                    borderColor: "#2ecc71",
-                    backgroundColor: "rgba(46, 204, 113, 0.2)",
+                    borderColor: "#e9e224",
+                    backgroundColor: "rgba(233, 226, 36, 0.2)",
                   },
                 }}
               >
@@ -531,10 +531,10 @@ export default function NewLevelDialog({
                     borderRadius: "4px",
                   },
                   "&::-webkit-scrollbar-thumb": {
-                    background: "rgba(46, 204, 113, 0.4)",
+                    background: "rgba(233, 226, 36, 0.4)",
                     borderRadius: "4px",
                     "&:hover": {
-                      background: "rgba(46, 204, 113, 0.6)",
+                      background: "rgba(233, 226, 36, 0.6)",
                     },
                   },
                 }}
@@ -546,7 +546,7 @@ export default function NewLevelDialog({
                       sx={{
                         p: 2,
                         backgroundColor: "rgba(26, 26, 26, 0.5)",
-                        border: "1px solid rgba(46, 204, 113, 0.3)",
+                        border: "1px solid rgba(233, 226, 36, 0.3)",
                         borderRadius: 2,
                       }}
                     >
@@ -595,20 +595,20 @@ export default function NewLevelDialog({
                             sx: {
                               color: "rgba(255, 255, 255, 0.7)",
                               "&.Mui-focused": {
-                                color: "#2ecc71",
+                                color: "#e9e224",
                               },
                             },
                           }}
                           sx={{
                             "& .MuiOutlinedInput-root": {
                               "& fieldset": {
-                                borderColor: "rgba(46, 204, 113, 0.3)",
+                                borderColor: "rgba(233, 226, 36, 0.3)",
                               },
                               "&:hover fieldset": {
-                                borderColor: "rgba(46, 204, 113, 0.5)",
+                                borderColor: "rgba(233, 226, 36, 0.5)",
                               },
                               "&.Mui-focused fieldset": {
-                                borderColor: "#2ecc71",
+                                borderColor: "#e9e224",
                               },
                               backgroundColor: "rgba(255,255,255,0.05)",
                             },
@@ -634,20 +634,20 @@ export default function NewLevelDialog({
                               sx: {
                                 color: "rgba(255, 255, 255, 0.7)",
                                 "&.Mui-focused": {
-                                  color: "#2ecc71",
+                                  color: "#e9e224",
                                 },
                               },
                             }}
                             sx={{
                               "& .MuiOutlinedInput-root": {
                                 "& fieldset": {
-                                  borderColor: "rgba(46, 204, 113, 0.3)",
+                                  borderColor: "rgba(233, 226, 36, 0.3)",
                                 },
                                 "&:hover fieldset": {
-                                  borderColor: "rgba(46, 204, 113, 0.5)",
+                                  borderColor: "rgba(233, 226, 36, 0.5)",
                                 },
                                 "&.Mui-focused fieldset": {
-                                  borderColor: "#2ecc71",
+                                  borderColor: "#e9e224",
                                 },
                                 backgroundColor: "rgba(255,255,255,0.05)",
                               },
@@ -672,20 +672,20 @@ export default function NewLevelDialog({
                               sx: {
                                 color: "rgba(255, 255, 255, 0.7)",
                                 "&.Mui-focused": {
-                                  color: "#2ecc71",
+                                  color: "#e9e224",
                                 },
                               },
                             }}
                             sx={{
                               "& .MuiOutlinedInput-root": {
                                 "& fieldset": {
-                                  borderColor: "rgba(46, 204, 113, 0.3)",
+                                  borderColor: "rgba(233, 226, 36, 0.3)",
                                 },
                                 "&:hover fieldset": {
-                                  borderColor: "rgba(46, 204, 113, 0.5)",
+                                  borderColor: "rgba(233, 226, 36, 0.5)",
                                 },
                                 "&.Mui-focused fieldset": {
-                                  borderColor: "#2ecc71",
+                                  borderColor: "#e9e224",
                                 },
                                 backgroundColor: "rgba(255,255,255,0.05)",
                               },
@@ -700,7 +700,7 @@ export default function NewLevelDialog({
             )}
           </Stack>
 
-          <Divider sx={{ borderColor: "rgba(46, 204, 113, 0.2)" }} />
+          <Divider sx={{ borderColor: "rgba(233, 226, 36, 0.2)" }} />
 
           <Stack spacing={1.5}>
             <Typography variant="subtitle2" sx={{ color: "rgba(255, 255, 255, 0.8)" }}>
@@ -713,7 +713,7 @@ export default function NewLevelDialog({
                   flex: 1,
                   minHeight: 120,
                   borderRadius: 3,
-                  border: "1px dashed rgba(46, 204, 113, 0.4)",
+                  border: "1px dashed rgba(233, 226, 36, 0.4)",
                   backgroundColor: "rgba(26, 26, 26, 0.5)",
                   display: "flex",
                   alignItems: "center",
@@ -763,13 +763,13 @@ export default function NewLevelDialog({
                     px: 4,
                     py: 1.2,
                     borderRadius: 3,
-                    borderColor: "rgba(46, 204, 113, 0.5)",
-                    backgroundColor: "rgba(46, 204, 113, 0.1)",
-                    color: "#2ecc71",
+                    borderColor: "rgba(233, 226, 36, 0.5)",
+                    backgroundColor: "rgba(233, 226, 36, 0.1)",
+                    color: "#e9e224",
                     whiteSpace: "nowrap",
                     "&:hover": {
-                      borderColor: "#2ecc71",
-                      backgroundColor: "rgba(46, 204, 113, 0.2)",
+                      borderColor: "#e9e224",
+                      backgroundColor: "rgba(233, 226, 36, 0.2)",
                     },
                     "&:disabled": {
                       color: "rgba(255, 255, 255, 0.5)",
@@ -814,7 +814,7 @@ export default function NewLevelDialog({
           ) : null}
         </Stack>
       </DialogContent>
-      <DialogActions sx={{ px: 3, py: 2, borderTop: "1px solid rgba(46, 204, 113, 0.2)" }}>
+      <DialogActions sx={{ px: 3, py: 2, borderTop: "1px solid rgba(233, 226, 36, 0.2)" }}>
         <Button 
           onClick={resetAndClose} 
           sx={{ 
@@ -834,16 +834,16 @@ export default function NewLevelDialog({
           sx={{ 
             px: 3, 
             borderRadius: 3,
-            background: "linear-gradient(135deg, #2ecc71, #27ae60)",
+            background: "linear-gradient(135deg, #e9e224, #d4c920)",
             boxShadow:
-              "0 8px 24px rgba(46, 204, 113, 0.4), 0 0 0 1px rgba(46, 204, 113, 0.2)",
+              "0 8px 24px rgba(233, 226, 36, 0.4), 0 0 0 1px rgba(233, 226, 36, 0.2)",
             "&:hover": {
-              background: "linear-gradient(135deg, #27ae60, #229954)",
+              background: "linear-gradient(135deg, #d4c920, #bfb01c)",
               boxShadow:
-                "0 12px 32px rgba(46, 204, 113, 0.6), 0 0 0 1px rgba(46, 204, 113, 0.3)",
+                "0 12px 32px rgba(233, 226, 36, 0.6), 0 0 0 1px rgba(233, 226, 36, 0.3)",
             },
             "&:disabled": {
-              background: "rgba(46, 204, 113, 0.3)",
+              background: "rgba(233, 226, 36, 0.3)",
               color: "rgba(255, 255, 255, 0.5)",
             },
           }}

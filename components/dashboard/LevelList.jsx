@@ -22,9 +22,9 @@ function LevelBadge({ level }) {
         fontSize: 12,
         fontWeight: 600,
         background:
-          "linear-gradient(135deg, rgba(46, 204, 113, 0.3), rgba(26, 188, 156, 0.3))",
+          "linear-gradient(135deg, rgba(233, 226, 36, 0.3), rgba(26, 188, 156, 0.3))",
         color: "#ffffff",
-        border: "1px solid rgba(46, 204, 113, 0.4)",
+        border: "1px solid rgba(233, 226, 36, 0.4)",
       }}
     >
       Level {level}
@@ -97,8 +97,8 @@ export default function LevelList({
           padding: 3,
           textAlign: "center",
           background:
-            "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(46, 204, 113, 0.08), rgba(26, 188, 156, 0.1))",
-          border: "1px dashed rgba(46, 204, 113, 0.4)",
+            "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(233, 226, 36, 0.08), rgba(26, 188, 156, 0.1))",
+          border: "1px dashed rgba(233, 226, 36, 0.4)",
           boxShadow: "0 18px 32px rgba(0, 0, 0, 0.5)",
         }}
       >
@@ -116,11 +116,11 @@ export default function LevelList({
               mt: 1,
               px: 2,
               py: 1,
-              border: "1px solid rgba(46, 204, 113, 0.6)",
-              backgroundColor: "rgba(46, 204, 113, 0.15)",
+              border: "1px solid rgba(233, 226, 36, 0.6)",
+              backgroundColor: "rgba(233, 226, 36, 0.15)",
             }}
           >
-            <Typography fontWeight={600} sx={{ color: "#2ecc71" }}>
+            <Typography fontWeight={600} sx={{ color: "#e9e224" }}>
               Create Level
             </Typography>
           </CardActionArea>
@@ -158,15 +158,15 @@ export default function LevelList({
             sx={{
               borderRadius: 3,
               border: isSelected
-                ? "2px solid #2ecc71"
-                : "1px solid rgba(46, 204, 113, 0.2)",
+                ? "2px solid #e9e224"
+                : "1px solid rgba(233, 226, 36, 0.2)",
               background: isSelected
-                ? "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(46, 204, 113, 0.15), rgba(26, 188, 156, 0.1))"
-                : "linear-gradient(135deg, rgba(26, 26, 26, 0.9), rgba(46, 204, 113, 0.05), rgba(26, 188, 156, 0.05))",
+                ? "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(233, 226, 36, 0.15), rgba(26, 188, 156, 0.1))"
+                : "linear-gradient(135deg, rgba(26, 26, 26, 0.9), rgba(233, 226, 36, 0.05), rgba(26, 188, 156, 0.05))",
               transition: "all 0.25s ease",
               transform: isSelected ? "translateY(-2px)" : "none",
               boxShadow: isSelected
-                ? "0 18px 30px rgba(46, 204, 113, 0.3), 0 0 0 1px rgba(46, 204, 113, 0.2)"
+                ? "0 18px 30px rgba(233, 226, 36, 0.3), 0 0 0 1px rgba(233, 226, 36, 0.2)"
                 : "0 8px 18px rgba(0, 0, 0, 0.3)",
               minWidth: 0,
             }}
@@ -256,13 +256,13 @@ export default function LevelList({
             left: "50%",
             transform: "translateX(-50%)",
             mt: 2,
-            background: "linear-gradient(135deg, #2ecc71, #27ae60)",
+            background: "linear-gradient(135deg, #e9e224, #d4c920)",
             boxShadow:
-              "0 8px 24px rgba(46, 204, 113, 0.4), 0 0 0 1px rgba(46, 204, 113, 0.2)",
+              "0 8px 24px rgba(233, 226, 36, 0.4), 0 0 0 1px rgba(233, 226, 36, 0.2)",
             "&:hover": {
-              background: "linear-gradient(135deg, #27ae60, #229954)",
+              background: "linear-gradient(135deg, #d4c920, #bfb01c)",
               boxShadow:
-                "0 12px 32px rgba(46, 204, 113, 0.6), 0 0 0 1px rgba(46, 204, 113, 0.3)",
+                "0 12px 32px rgba(233, 226, 36, 0.6), 0 0 0 1px rgba(233, 226, 36, 0.3)",
             },
             display: { xs: "flex", lg: "none" }, // Show on mobile/tablet, hide on desktop (header button visible)
           }}

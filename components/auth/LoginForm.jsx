@@ -88,9 +88,9 @@ export default function LoginForm() {
         width: "100%",
         backdropFilter: "blur(24px)",
         background:
-          "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(46, 204, 113, 0.08), rgba(26, 188, 156, 0.1))",
-        border: "1px solid rgba(46, 204, 113, 0.3)",
-        boxShadow: "0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(46, 204, 113, 0.1), 0 0 40px rgba(46, 204, 113, 0.1)",
+          "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(233, 226, 36, 0.08), rgba(26, 188, 156, 0.1))",
+        border: "1px solid rgba(233, 226, 36, 0.3)",
+        boxShadow: "0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(233, 226, 36, 0.1), 0 0 40px rgba(233, 226, 36, 0.1)",
       }}
     >
       <CardContent component="form" onSubmit={handleSubmit} sx={{ p: 4 }}>
@@ -104,11 +104,11 @@ export default function LoginForm() {
               alignItems: "center",
               justifyContent: "center",
               background:
-                "linear-gradient(135deg, rgba(46, 204, 113, 0.3), rgba(26, 188, 156, 0.3))",
-              boxShadow: "0 20px 40px rgba(46, 204, 113, 0.3), 0 0 0 1px rgba(46, 204, 113, 0.2)",
+                "linear-gradient(135deg, rgba(233, 226, 36, 0.3), rgba(26, 188, 156, 0.3))",
+              boxShadow: "0 20px 40px rgba(233, 226, 36, 0.3), 0 0 0 1px rgba(233, 226, 36, 0.2)",
             }}
           >
-            <LockRoundedIcon sx={{ color: "#2ecc71", fontSize: 36 }} />
+            <LockRoundedIcon sx={{ color: "#e9e224", fontSize: 36 }} />
           </Box>
           <Box textAlign="center">
             <Typography variant="h5" fontWeight={700} sx={{ color: "#ffffff" }}>
@@ -138,7 +138,7 @@ export default function LoginForm() {
                 sx: {
                   color: "rgba(255, 255, 255, 0.7)",
                   "&.Mui-focused": {
-                    color: "#2ecc71",
+                    color: "#e9e224",
                   },
                 },
               }}
@@ -161,7 +161,7 @@ export default function LoginForm() {
                 sx: {
                   color: "rgba(255, 255, 255, 0.7)",
                   "&.Mui-focused": {
-                    color: "#2ecc71",
+                    color: "#e9e224",
                   },
                 },
               }}

@@ -18,7 +18,7 @@ export default function LevelPreview({ level }) {
   }
 
   const dots = Array.isArray(level.dots) ? level.dots : [];
-  const backgroundColor = level.backgroundColor?.trim() || "#2ecc71";
+  const backgroundColor = level.backgroundColor?.trim() || "#e9e224";
   
   // Parse dot sizes
   const parseSize = (sizeStr) => {

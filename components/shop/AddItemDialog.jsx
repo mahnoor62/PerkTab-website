@@ -173,8 +173,8 @@ export default function AddItemDialog({
       PaperProps={{
         sx: {
           background:
-            "linear-gradient(135deg, rgba(26, 26, 26, 0.98), rgba(46, 204, 113, 0.05))",
-          border: "1px solid rgba(46, 204, 113, 0.3)",
+            "linear-gradient(135deg, rgba(26, 26, 26, 0.98), rgba(233, 226, 36, 0.05))",
+          border: "1px solid rgba(233, 226, 36, 0.3)",
         },
       }}
     >
@@ -277,8 +277,8 @@ export default function AddItemDialog({
                 borderColor: "rgba(255, 255, 255, 0.3)",
                 color: "rgba(255, 255, 255, 0.7)",
                 "&:hover": {
-                  borderColor: "#2ecc71",
-                  backgroundColor: "rgba(46, 204, 113, 0.1)",
+                  borderColor: "#e9e224",
+                  backgroundColor: "rgba(233, 226, 36, 0.1)",
                 },
               }}
             >
@@ -365,8 +365,8 @@ export default function AddItemDialog({
                   borderColor: "rgba(255, 255, 255, 0.3)",
                   color: "rgba(255, 255, 255, 0.9)",
                   "&:hover": {
-                    borderColor: "#2ecc71",
-                    backgroundColor: "rgba(46, 204, 113, 0.15)",
+                    borderColor: "#e9e224",
+                    backgroundColor: "rgba(233, 226, 36, 0.15)",
                   },
                 }}
               >
@@ -395,9 +395,9 @@ export default function AddItemDialog({
                     label={code}
                     onDelete={() => handleRemoveRedeemCode(code)}
                     sx={{
-                      backgroundColor: "rgba(46, 204, 113, 0.15)",
-                      color: "#2ecc71",
-                      borderColor: "rgba(46, 204, 113, 0.4)",
+                      backgroundColor: "rgba(233, 226, 36, 0.15)",
+                      color: "#e9e224",
+                      borderColor: "rgba(233, 226, 36, 0.4)",
                     }}
                     variant="outlined"
                   />
@@ -434,9 +434,9 @@ export default function AddItemDialog({
             isUploadingImage
           }
           sx={{
-            background: "linear-gradient(135deg, #2ecc71, #27ae60)",
+            background: "linear-gradient(135deg, #e9e224, #d4c920)",
             "&:hover": {
-              background: "linear-gradient(135deg, #27ae60, #229954)",
+              background: "linear-gradient(135deg, #d4c920, #bfb01c)",
             },
           }}
         >

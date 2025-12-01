@@ -137,13 +137,13 @@ export default function ErrorDisplay({ error, onRetry, title = "Error Occurred" 
                   px: 4,
                   py: 1.5,
                   borderRadius: 3,
-                  background: "linear-gradient(135deg, #2ecc71, #27ae60)",
+                  background: "linear-gradient(135deg, #e9e224, #d4c920)",
                   boxShadow:
-                    "0 8px 24px rgba(46, 204, 113, 0.4), 0 0 0 1px rgba(46, 204, 113, 0.2)",
+                    "0 8px 24px rgba(233, 226, 36, 0.4), 0 0 0 1px rgba(233, 226, 36, 0.2)",
                   "&:hover": {
-                    background: "linear-gradient(135deg, #27ae60, #229954)",
+                    background: "linear-gradient(135deg, #d4c920, #bfb01c)",
                     boxShadow:
-                      "0 12px 32px rgba(46, 204, 113, 0.6), 0 0 0 1px rgba(46, 204, 113, 0.3)",
+                      "0 12px 32px rgba(233, 226, 36, 0.6), 0 0 0 1px rgba(233, 226, 36, 0.3)",
                   },
                 }}
               >

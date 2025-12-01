@@ -79,8 +79,8 @@ function ColorSwatch({ color, onChange, fieldName }) {
           transition: "transform 0.2s, box-shadow 0.2s",
           "&:hover": {
             transform: "scale(1.1)",
-            boxShadow: "0 6px 15px rgba(46, 204, 113, 0.4)",
-            border: "1px solid rgba(46, 204, 113, 0.8)",
+            boxShadow: "0 6px 15px rgba(233, 226, 36, 0.4)",
+            border: "1px solid rgba(233, 226, 36, 0.8)",
           },
         }}
       />
@@ -100,7 +100,7 @@ function ColorSwatch({ color, onChange, fieldName }) {
           sx: {
             p: 2,
             backgroundColor: "rgba(26, 26, 26, 0.95)",
-            border: "1px solid rgba(46, 204, 113, 0.3)",
+            border: "1px solid rgba(233, 226, 36, 0.3)",
             borderRadius: 2,
           },
         }}
@@ -117,7 +117,7 @@ function ColorSwatch({ color, onChange, fieldName }) {
             sx={{
               width: 200,
               height: 50,
-              border: "1px solid rgba(46, 204, 113, 0.3)",
+              border: "1px solid rgba(233, 226, 36, 0.3)",
               borderRadius: 1,
               cursor: "pointer",
             }}
@@ -138,13 +138,13 @@ function ColorSwatch({ color, onChange, fieldName }) {
                 backgroundColor: "rgba(255,255,255,0.1)",
                 color: "#ffffff",
                 "& fieldset": {
-                  borderColor: "rgba(46, 204, 113, 0.3)",
+                  borderColor: "rgba(233, 226, 36, 0.3)",
                 },
                 "&:hover fieldset": {
-                  borderColor: "rgba(46, 204, 113, 0.5)",
+                  borderColor: "rgba(233, 226, 36, 0.5)",
                 },
                 "&.Mui-focused fieldset": {
-                  borderColor: "#2ecc71",
+                  borderColor: "#e9e224",
                 },
               },
               "& input": {
@@ -386,7 +386,7 @@ export default function LevelEditor({
               sx: {
                 color: "rgba(255, 255, 255, 0.7)",
                 "&.Mui-focused": {
-                  color: "#2ecc71",
+                  color: "#e9e224",
                 },
               },
             }}
@@ -398,7 +398,7 @@ export default function LevelEditor({
           />
         </Stack>
 
-        <Divider sx={{ borderColor: "rgba(46, 204, 113, 0.2)" }} />
+        <Divider sx={{ borderColor: "rgba(233, 226, 36, 0.2)" }} />
 
         <Stack spacing={2}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -411,12 +411,12 @@ export default function LevelEditor({
               onClick={handleAddDot}
               sx={{
                 borderRadius: 2,
-                borderColor: "rgba(46, 204, 113, 0.5)",
-                backgroundColor: "rgba(46, 204, 113, 0.1)",
-                color: "#2ecc71",
+                borderColor: "rgba(233, 226, 36, 0.5)",
+                backgroundColor: "rgba(233, 226, 36, 0.1)",
+                color: "#e9e224",
                 "&:hover": {
-                  borderColor: "#2ecc71",
-                  backgroundColor: "rgba(46, 204, 113, 0.2)",
+                  borderColor: "#e9e224",
+                  backgroundColor: "rgba(233, 226, 36, 0.2)",
                 },
               }}
             >
@@ -443,10 +443,10 @@ export default function LevelEditor({
                   borderRadius: "4px",
                 },
                 "&::-webkit-scrollbar-thumb": {
-                  background: "rgba(46, 204, 113, 0.4)",
+                  background: "rgba(233, 226, 36, 0.4)",
                   borderRadius: "4px",
                   "&:hover": {
-                    background: "rgba(46, 204, 113, 0.6)",
+                    background: "rgba(233, 226, 36, 0.6)",
                   },
                 },
               }}
@@ -458,7 +458,7 @@ export default function LevelEditor({
                     sx={{
                       p: 2,
                       backgroundColor: "rgba(26, 26, 26, 0.5)",
-                      border: "1px solid rgba(46, 204, 113, 0.3)",
+                      border: "1px solid rgba(233, 226, 36, 0.3)",
                       borderRadius: 2,
                     }}
                   >
@@ -518,20 +518,20 @@ export default function LevelEditor({
                           sx: {
                             color: "rgba(255, 255, 255, 0.7)",
                             "&.Mui-focused": {
-                              color: "#2ecc71",
+                              color: "#e9e224",
                             },
                           },
                         }}
                         sx={{
                           "& .MuiOutlinedInput-root": {
                             "& fieldset": {
-                              borderColor: "rgba(46, 204, 113, 0.3)",
+                              borderColor: "rgba(233, 226, 36, 0.3)",
                             },
                             "&:hover fieldset": {
-                              borderColor: "rgba(46, 204, 113, 0.5)",
+                              borderColor: "rgba(233, 226, 36, 0.5)",
                             },
                             "&.Mui-focused fieldset": {
-                              borderColor: "#2ecc71",
+                              borderColor: "#e9e224",
                             },
                             backgroundColor: "rgba(255,255,255,0.05)",
                           },
@@ -557,20 +557,20 @@ export default function LevelEditor({
                             sx: {
                               color: "rgba(255, 255, 255, 0.7)",
                               "&.Mui-focused": {
-                                color: "#2ecc71",
+                                color: "#e9e224",
                               },
                             },
                           }}
                           sx={{
                             "& .MuiOutlinedInput-root": {
                               "& fieldset": {
-                                borderColor: "rgba(46, 204, 113, 0.3)",
+                                borderColor: "rgba(233, 226, 36, 0.3)",
                               },
                               "&:hover fieldset": {
-                                borderColor: "rgba(46, 204, 113, 0.5)",
+                                borderColor: "rgba(233, 226, 36, 0.5)",
                               },
                               "&.Mui-focused fieldset": {
-                                borderColor: "#2ecc71",
+                                borderColor: "#e9e224",
                               },
                               backgroundColor: "rgba(255,255,255,0.05)",
                             },
@@ -595,20 +595,20 @@ export default function LevelEditor({
                             sx: {
                               color: "rgba(255, 255, 255, 0.7)",
                               "&.Mui-focused": {
-                                color: "#2ecc71",
+                                color: "#e9e224",
                               },
                             },
                           }}
                           sx={{
                             "& .MuiOutlinedInput-root": {
                               "& fieldset": {
-                                borderColor: "rgba(46, 204, 113, 0.3)",
+                                borderColor: "rgba(233, 226, 36, 0.3)",
                               },
                               "&:hover fieldset": {
-                                borderColor: "rgba(46, 204, 113, 0.5)",
+                                borderColor: "rgba(233, 226, 36, 0.5)",
                               },
                               "&.Mui-focused fieldset": {
-                                borderColor: "#2ecc71",
+                                borderColor: "#e9e224",
                               },
                               backgroundColor: "rgba(255,255,255,0.05)",
                             },
@@ -623,7 +623,7 @@ export default function LevelEditor({
           )}
         </Stack>
 
-        <Divider sx={{ borderColor: "rgba(46, 204, 113, 0.2)" }} />
+        <Divider sx={{ borderColor: "rgba(233, 226, 36, 0.2)" }} />
 
         <Stack spacing={2}>
           <Typography variant="subtitle1" fontWeight={600} sx={{ color: "#ffffff" }}>
@@ -652,12 +652,12 @@ export default function LevelEditor({
               py: 1.4,
               alignSelf: "flex-start",
               borderRadius: 3,
-              borderColor: "rgba(46, 204, 113, 0.5)",
-              backgroundColor: "rgba(46, 204, 113, 0.1)",
-              color: "#2ecc71",
+              borderColor: "rgba(233, 226, 36, 0.5)",
+              backgroundColor: "rgba(233, 226, 36, 0.1)",
+              color: "#e9e224",
               "&:hover": {
-                borderColor: "#2ecc71",
-                backgroundColor: "rgba(46, 204, 113, 0.2)",
+                borderColor: "#e9e224",
+                backgroundColor: "rgba(233, 226, 36, 0.2)",
               },
             }}
           >

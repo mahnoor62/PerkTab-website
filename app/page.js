@@ -133,7 +133,7 @@ export default function Home() {
           gap: 2,
         }}
       >
-        <CircularProgress sx={{ color: "#2ecc71" }} size={48} />
+        <CircularProgress sx={{ color: "#e9e224" }} size={48} />
         <Box sx={{ color: "rgba(255, 255, 255, 0.7)", fontSize: "14px" }}>
           Loading dashboard...
         </Box>

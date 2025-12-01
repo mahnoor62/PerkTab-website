@@ -47,13 +47,13 @@ export default function AppHeader({ adminEmail, onLogout }) {
               height: 40,
               borderRadius: "50%",
               background:
-                "linear-gradient(135deg, rgba(46, 204, 113, 0.4), rgba(26, 188, 156, 0.35))",
+                "linear-gradient(135deg, rgba(212, 201, 32, 0.8), rgba(233, 226, 36, 0.9))",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontWeight: 700,
               color: "#000000",
-              boxShadow: "0 8px 18px rgba(46, 204, 113, 0.3), 0 0 0 1px rgba(46, 204, 113, 0.2)",
+              boxShadow: "0 8px 18px rgba(233, 226, 36, 0.3), 0 0 0 1px rgba(233, 226, 36, 0.2)",
             }}
           >
             D
@@ -74,7 +74,7 @@ export default function AppHeader({ adminEmail, onLogout }) {
               sx={{
                 color: "rgba(255, 255, 255, 0.7)",
                 "&:hover": {
-                  backgroundColor: "rgba(46, 204, 113, 0.1)",
+                  backgroundColor: "rgba(233, 226, 36, 0.1)",
                 },
               }}
             >
@@ -89,7 +89,7 @@ export default function AppHeader({ adminEmail, onLogout }) {
               sx={{
                 color: "rgba(255, 255, 255, 0.7)",
                 "&:hover": {
-                  backgroundColor: "rgba(46, 204, 113, 0.1)",
+                  backgroundColor: "rgba(233, 226, 36, 0.1)",
                 },
               }}
             >

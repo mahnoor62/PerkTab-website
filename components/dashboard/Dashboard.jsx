@@ -251,9 +251,9 @@
 //               borderRadius: 5,
 //               p: { xs: 3, md: 4 },
 //               background:
-//                 "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(46, 204, 113, 0.08), rgba(26, 188, 156, 0.1))",
-//               border: "1px solid rgba(46, 204, 113, 0.3)",
-//               boxShadow: "0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(46, 204, 113, 0.1), 0 0 40px rgba(46, 204, 113, 0.1)",
+//                 "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(233, 226, 36, 0.08), rgba(26, 188, 156, 0.1))",
+//               border: "1px solid rgba(233, 226, 36, 0.3)",
+//               boxShadow: "0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(233, 226, 36, 0.1), 0 0 40px rgba(233, 226, 36, 0.1)",
 //               position: "relative",
 //               overflow: "hidden",
 //               "&::before": {
@@ -264,7 +264,7 @@
 //                 width: 200,
 //                 height: 200,
 //                 borderRadius: "50%",
-//                 background: "radial-gradient(circle, rgba(46, 204, 113, 0.15), transparent)",
+//                 background: "radial-gradient(circle, rgba(233, 226, 36, 0.15), transparent)",
 //                 filter: "blur(40px)",
 //                 pointerEvents: "none",
 //               },
@@ -312,13 +312,13 @@
 //                       onClick={() => setCreateDialogOpen(true)}
 //                       sx={{
 //                         borderRadius: 3,
-//                         background: "linear-gradient(135deg, #2ecc71, #27ae60)",
+//                         background: "linear-gradient(135deg, #e9e224, #d4c920)",
 //                         boxShadow:
-//                           "0 8px 24px rgba(46, 204, 113, 0.4), 0 0 0 1px rgba(46, 204, 113, 0.2)",
+//                           "0 8px 24px rgba(233, 226, 36, 0.4), 0 0 0 1px rgba(233, 226, 36, 0.2)",
 //                         "&:hover": {
-//                           background: "linear-gradient(135deg, #27ae60, #229954)",
+//                           background: "linear-gradient(135deg, #d4c920, #bfb01c)",
 //                           boxShadow:
-//                             "0 12px 32px rgba(46, 204, 113, 0.6), 0 0 0 1px rgba(46, 204, 113, 0.3)",
+//                             "0 12px 32px rgba(233, 226, 36, 0.6), 0 0 0 1px rgba(233, 226, 36, 0.3)",
 //                         },
 //                       }}
 //                     >
@@ -356,10 +356,10 @@
 //                       borderRadius: "4px",
 //                     },
 //                     "&::-webkit-scrollbar-thumb": {
-//                       background: "rgba(46, 204, 113, 0.4)",
+//                       background: "rgba(233, 226, 36, 0.4)",
 //                       borderRadius: "4px",
 //                       "&:hover": {
-//                         background: "rgba(46, 204, 113, 0.6)",
+//                         background: "rgba(233, 226, 36, 0.6)",
 //                       },
 //                     },
 //                   }}
@@ -377,9 +377,9 @@
 //                   sx={{
 //                     borderRadius: 4,
 //                     background:
-//                       "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(46, 204, 113, 0.08), rgba(26, 188, 156, 0.1))",
-//                     border: "1px solid rgba(46, 204, 113, 0.3)",
-//                     boxShadow: "0 20px 45px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(46, 204, 113, 0.1)",
+//                       "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(233, 226, 36, 0.08), rgba(26, 188, 156, 0.1))",
+//                     border: "1px solid rgba(233, 226, 36, 0.3)",
+//                     boxShadow: "0 20px 45px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(233, 226, 36, 0.1)",
 //                   }}
 //                 >
 //                   <CardContent
@@ -706,10 +706,10 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
                 borderRadius: 5,
                 p: { xs: 3, md: 4 },
                 background:
-                  "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(46, 204, 113, 0.08), rgba(26, 188, 156, 0.1))",
-                border: "1px solid rgba(46, 204, 113, 0.3)",
+                  "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(233, 226, 36, 0.08), rgba(26, 188, 156, 0.1))",
+                border: "1px solid rgba(233, 226, 36, 0.3)",
                 boxShadow:
-                  "0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(46, 204, 113, 0.1), 0 0 40px rgba(46, 204, 113, 0.1)",
+                  "0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(233, 226, 36, 0.1), 0 0 40px rgba(233, 226, 36, 0.1)",
                 position: "relative",
                 overflow: "hidden",
                 "&::before": {
@@ -721,7 +721,7 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
                   height: 200,
                   borderRadius: "50%",
                   background:
-                    "radial-gradient(circle, rgba(46, 204, 113, 0.15), transparent)",
+                    "radial-gradient(circle, rgba(233, 226, 36, 0.15), transparent)",
                   filter: "blur(40px)",
                   pointerEvents: "none",
                 },
@@ -778,14 +778,14 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
                         sx={{
                           borderRadius: 3,
                           background:
-                            "linear-gradient(135deg, #2ecc71, #27ae60)",
+                            "linear-gradient(135deg, #e9e224, #d4c920)",
                           boxShadow:
-                            "0 8px 24px rgba(46, 204, 113, 0.4), 0 0 0 1px rgba(46, 204, 113, 0.2)",
+                            "0 8px 24px rgba(233, 226, 36, 0.4), 0 0 0 1px rgba(233, 226, 36, 0.2)",
                           "&:hover": {
                             background:
-                              "linear-gradient(135deg, #27ae60, #229954)",
+                              "linear-gradient(135deg, #d4c920, #bfb01c)",
                             boxShadow:
-                              "0 12px 32px rgba(46, 204, 113, 0.6), 0 0 0 1px rgba(46, 204, 113, 0.3)",
+                              "0 12px 32px rgba(233, 226, 36, 0.6), 0 0 0 1px rgba(233, 226, 36, 0.3)",
                           },
                         }}
                       >
@@ -823,10 +823,10 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
                         borderRadius: "4px",
                       },
                       "&::-webkit-scrollbar-thumb": {
-                        background: "rgba(46, 204, 113, 0.4)",
+                        background: "rgba(233, 226, 36, 0.4)",
                         borderRadius: "4px",
                         "&:hover": {
-                          background: "rgba(46, 204, 113, 0.6)",
+                          background: "rgba(233, 226, 36, 0.6)",
                         },
                       },
                     }}
@@ -845,10 +845,10 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
                     sx={{
                       borderRadius: 4,
                       background:
-                        "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(46, 204, 113, 0.08), rgba(26, 188, 156, 0.1))",
-                      border: "1px solid rgba(46, 204, 113, 0.3)",
+                        "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(233, 226, 36, 0.08), rgba(26, 188, 156, 0.1))",
+                      border: "1px solid rgba(233, 226, 36, 0.3)",
                       boxShadow:
-                        "0 20px 45px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(46, 204, 113, 0.1)",
+                        "0 20px 45px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(233, 226, 36, 0.1)",
                     }}
                   >
                     <CardContent
