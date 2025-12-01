@@ -11,22 +11,161 @@ import {
   Stack,
   TextField,
   Typography,
+  InputAdornment,
+  Popover,
+  IconButton,
+  Paper,
+  Divider,
 } from "@mui/material";
 import { useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { getLogoUrl } from "@/lib/logo";
 
 const defaultFormState = {
   level: "",
   backgroundColor: "#f4f9ff",
-  dot1Color: "#5ac8fa",
-  dot2Color: "#8ad4ff",
-  dot3Color: "#a8e6ff",
-  dot4Color: "#c4f0ff",
-  dot5Color: "#e2f8ff",
+  dots: [],
   logoUrl: "",
 };
+
+function ColorSwatch({ color, onChange, fieldName }) {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [pickerColor, setPickerColor] = useState("#000000");
+
+  const open = Boolean(anchorEl);
+
+  const convertToHex = (colorStr) => {
+    if (!colorStr) return "#000000";
+    const trimmed = colorStr.trim();
+    if (trimmed.startsWith("#")) {
+      return trimmed.length === 7 ? trimmed : "#000000";
+    }
+    if (trimmed.startsWith("rgb")) {
+      const rgb = trimmed.match(/\d+/g);
+      if (rgb && rgb.length >= 3) {
+        const r = parseInt(rgb[0]).toString(16).padStart(2, "0");
+        const g = parseInt(rgb[1]).toString(16).padStart(2, "0");
+        const b = parseInt(rgb[2]).toString(16).padStart(2, "0");
+        return `#${r}${g}${b}`;
+      }
+    }
+    return "#000000";
+  };
+
+  const handleClick = (event) => {
+    event.stopPropagation();
+    const hexColor = convertToHex(color);
+    setPickerColor(hexColor);
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleColorChange = (event) => {
+    const newColor = event.target.value;
+    setPickerColor(newColor);
+    if (onChange && fieldName) {
+      onChange(fieldName, newColor);
+    }
+  };
+
+  return (
+    <>
+      <Box
+        onClick={handleClick}
+        sx={{
+          width: 28,
+          height: 28,
+          borderRadius: "50%",
+          border: "1px solid rgba(255,255,255,0.6)",
+          boxShadow: "0 4px 10px rgba(0,0,0,0.12)",
+          background: color?.trim() || "transparent",
+          cursor: "pointer",
+          transition: "transform 0.2s, box-shadow 0.2s",
+          "&:hover": {
+            transform: "scale(1.1)",
+            boxShadow: "0 6px 15px rgba(46, 204, 113, 0.4)",
+            border: "1px solid rgba(46, 204, 113, 0.8)",
+          },
+        }}
+      />
+      <Popover
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handleClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "center",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "center",
+        }}
+        PaperProps={{
+          sx: {
+            p: 2,
+            backgroundColor: "rgba(26, 26, 26, 0.95)",
+            border: "1px solid rgba(46, 204, 113, 0.3)",
+            borderRadius: 2,
+          },
+        }}
+      >
+        <Stack spacing={2} alignItems="center">
+          <Typography variant="body2" sx={{ color: "#ffffff", fontWeight: 600 }}>
+            Pick a Color
+          </Typography>
+          <Box
+            component="input"
+            type="color"
+            value={convertToHex(pickerColor)}
+            onChange={handleColorChange}
+            sx={{
+              width: 200,
+              height: 50,
+              border: "1px solid rgba(46, 204, 113, 0.3)",
+              borderRadius: 1,
+              cursor: "pointer",
+            }}
+          />
+          <TextField
+            size="small"
+            value={pickerColor}
+            onChange={(e) => {
+              setPickerColor(e.target.value);
+              if (onChange && fieldName) {
+                onChange(fieldName, e.target.value);
+              }
+            }}
+            placeholder="#000000"
+            sx={{
+              width: 200,
+              "& .MuiOutlinedInput-root": {
+                backgroundColor: "rgba(255,255,255,0.1)",
+                color: "#ffffff",
+                "& fieldset": {
+                  borderColor: "rgba(46, 204, 113, 0.3)",
+                },
+                "&:hover fieldset": {
+                  borderColor: "rgba(46, 204, 113, 0.5)",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#2ecc71",
+                },
+              },
+              "& input": {
+                color: "#ffffff",
+              },
+            }}
+          />
+        </Stack>
+      </Popover>
+    </>
+  );
+}
 
 export default function NewLevelDialog({
   open,
@@ -52,6 +191,79 @@ export default function NewLevelDialog({
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddDot = () => {
+    setFormValues((prev) => ({
+      ...prev,
+      dots: [
+        ...prev.dots,
+        {
+          color: "#5ac8fa",
+          size: "36",
+          score: "0",
+        },
+      ],
+    }));
+  };
+
+  const handleDotChange = (index, field, value) => {
+    setFormValues((prev) => ({
+      ...prev,
+      dots: prev.dots.map((dot, i) =>
+        i === index ? { ...dot, [field]: value } : dot
+      ),
+    }));
+  };
+
+  const handleDotColorChange = (index, value) => {
+    handleDotChange(index, "color", value);
+  };
+
+  const handleRemoveDot = (index) => {
+    setFormValues((prev) => ({
+      ...prev,
+      dots: prev.dots.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleColorPickerChange = (fieldName, value) => {
+    setFormValues((prev) => ({ ...prev, [fieldName]: value }));
+  };
+
+  const handleDefaultColors = () => {
+    // Default color palette (excluding white/background color)
+    const defaultColorPalette = [
+      "#e92434", // red
+      "#ff9e1d", // orange
+      "#e9e224", // yellow
+      "#36ceba", // cyan
+      "#000000", // black
+    ];
+
+    setFormValues((prev) => {
+      const currentDotCount = prev.dots.length;
+      
+      // If no dots exist, don't add any
+      if (currentDotCount === 0) {
+        return {
+          ...prev,
+          backgroundColor: "#ffffff",
+        };
+      }
+
+      // Update existing dots with default colors (cycling through palette if needed)
+      const updatedDots = prev.dots.map((dot, index) => ({
+        ...dot,
+        color: defaultColorPalette[index % defaultColorPalette.length],
+      }));
+
+      return {
+        ...prev,
+        backgroundColor: "#ffffff",
+        dots: updatedDots,
+      };
+    });
   };
 
   const handleFileChange = async (event) => {
@@ -103,11 +315,7 @@ export default function NewLevelDialog({
       await onCreate({
         level: levelNumber,
         backgroundColor: formValues.backgroundColor,
-        dot1Color: formValues.dot1Color,
-        dot2Color: formValues.dot2Color,
-        dot3Color: formValues.dot3Color,
-        dot4Color: formValues.dot4Color,
-        dot5Color: formValues.dot5Color,
+        dots: formValues.dots,
         logoUrl: formValues.logoUrl,
       });
       resetAndClose();
@@ -135,32 +343,53 @@ export default function NewLevelDialog({
       }}
     >
       <DialogTitle sx={{ pb: 2, borderBottom: "1px solid rgba(46, 204, 113, 0.2)" }}>
-        <Stack direction="row" spacing={1.5} alignItems="center">
-          <Box
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flex: 1 }}>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: "16px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background:
+                  "linear-gradient(135deg, rgba(46, 204, 113, 0.3), rgba(26, 188, 156, 0.3))",
+                color: "#ffffff",
+                border: "1px solid rgba(46, 204, 113, 0.4)",
+                boxShadow: "0 12px 24px rgba(46, 204, 113, 0.35)",
+              }}
+            >
+              <AddIcon />
+            </Box>
+            <Box>
+              <Typography variant="h6" fontWeight={700} sx={{ color: "#ffffff" }}>
+                Create a New Level
+              </Typography>
+              <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
+                Define the level identifier and its initial visual palette.
+              </Typography>
+            </Box>
+          </Stack>
+          <Button
+            variant="outlined"
+            onClick={handleDefaultColors}
             sx={{
-              width: 40,
-              height: 40,
-              borderRadius: "16px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background:
-                "linear-gradient(135deg, rgba(46, 204, 113, 0.3), rgba(26, 188, 156, 0.3))",
-              color: "#ffffff",
-              border: "1px solid rgba(46, 204, 113, 0.4)",
-              boxShadow: "0 12px 24px rgba(46, 204, 113, 0.35)",
+              borderRadius: 2,
+              borderColor: "rgba(46, 204, 113, 0.5)",
+              backgroundColor: "rgba(46, 204, 113, 0.1)",
+              color: "#2ecc71",
+              px: 2,
+              py: 1,
+              whiteSpace: "nowrap",
+              "&:hover": {
+                borderColor: "#2ecc71",
+                backgroundColor: "rgba(46, 204, 113, 0.2)",
+              },
             }}
           >
-            <AddIcon />
-          </Box>
-          <Box>
-            <Typography variant="h6" fontWeight={700} sx={{ color: "#ffffff" }}>
-              Create a New Level
-            </Typography>
-            <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
-              Define the level identifier and its initial visual palette.
-            </Typography>
-          </Box>
+            Default Color
+          </Button>
         </Stack>
       </DialogTitle>
       <DialogContent dividers sx={{ "&.MuiDialogContent-dividers": { borderColor: "rgba(46, 204, 113, 0.2)" } }}>
@@ -213,224 +442,265 @@ export default function NewLevelDialog({
             }}
           />
 
-          <Typography variant="subtitle2" sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
-            Optional: configure the level with your preferred palette now, or adjust
-            after creation.
-          </Typography>
-
-          <Stack
-            spacing={2}
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" },
-              gap: 2,
+          <TextField
+            label="Background Color"
+            name="backgroundColor"
+            value={formValues.backgroundColor}
+            onChange={handleChange}
+            InputProps={{
+              sx: {
+                color: "#ffffff",
+                "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
+              },
+              endAdornment: (
+                <InputAdornment position="end">
+                  <ColorSwatch
+                    color={formValues.backgroundColor}
+                    onChange={handleColorPickerChange}
+                    fieldName="backgroundColor"
+                  />
+                </InputAdornment>
+              ),
             }}
-          >
-            <TextField
-              label="Background Color"
-              name="backgroundColor"
-              value={formValues.backgroundColor}
-              onChange={handleChange}
-              InputProps={{
-                sx: {
-                  color: "#ffffff",
-                  "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
+            InputLabelProps={{
+              sx: {
+                color: "rgba(255, 255, 255, 0.7)",
+                "&.Mui-focused": {
+                  color: "#2ecc71",
                 },
-              }}
-              InputLabelProps={{
-                sx: {
-                  color: "rgba(255, 255, 255, 0.7)",
-                  "&.Mui-focused": {
-                    color: "#2ecc71",
-                  },
+              },
+            }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "rgba(46, 204, 113, 0.3)",
                 },
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  "& fieldset": {
-                    borderColor: "rgba(46, 204, 113, 0.3)",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "rgba(46, 204, 113, 0.5)",
-                  },
-                  "&.Mui-focused fieldset": {
+                "&:hover fieldset": {
+                  borderColor: "rgba(46, 204, 113, 0.5)",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#2ecc71",
+                },
+                backgroundColor: "rgba(26, 26, 26, 0.5)",
+              },
+            }}
+          />
+
+          <Divider sx={{ borderColor: "rgba(46, 204, 113, 0.2)" }} />
+
+          <Stack spacing={2}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+              <Typography variant="subtitle1" fontWeight={600} sx={{ color: "#ffffff" }}>
+                Dots Configuration
+              </Typography>
+              <Button
+                variant="outlined"
+                startIcon={<AddIcon />}
+                onClick={handleAddDot}
+                sx={{
+                  borderRadius: 2,
+                  borderColor: "rgba(46, 204, 113, 0.5)",
+                  backgroundColor: "rgba(46, 204, 113, 0.1)",
+                  color: "#2ecc71",
+                  "&:hover": {
                     borderColor: "#2ecc71",
+                    backgroundColor: "rgba(46, 204, 113, 0.2)",
                   },
-                  backgroundColor: "rgba(26, 26, 26, 0.5)",
-                },
-              }}
-            />
-            <TextField
-              label="Dot 1 Color"
-              name="dot1Color"
-              value={formValues.dot1Color}
-              onChange={handleChange}
-              InputProps={{
-                sx: {
-                  color: "#ffffff",
-                  "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
-                },
-              }}
-              InputLabelProps={{
-                sx: {
-                  color: "rgba(255, 255, 255, 0.7)",
-                  "&.Mui-focused": {
-                    color: "#2ecc71",
+                }}
+              >
+                Add Dot
+              </Button>
+            </Stack>
+
+            {formValues.dots.length === 0 ? (
+              <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.6)", textAlign: "center", py: 2 }}>
+                No dots added yet. Click "Add Dot" to add your first dot.
+              </Typography>
+            ) : (
+              <Box
+                sx={{
+                  maxHeight: "500px",
+                  overflowY: "auto",
+                  overflowX: "hidden",
+                  pr: 1,
+                  "&::-webkit-scrollbar": {
+                    width: "8px",
                   },
-                },
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  "& fieldset": {
-                    borderColor: "rgba(46, 204, 113, 0.3)",
+                  "&::-webkit-scrollbar-track": {
+                    background: "rgba(26, 26, 26, 0.5)",
+                    borderRadius: "4px",
                   },
-                  "&:hover fieldset": {
-                    borderColor: "rgba(46, 204, 113, 0.5)",
+                  "&::-webkit-scrollbar-thumb": {
+                    background: "rgba(46, 204, 113, 0.4)",
+                    borderRadius: "4px",
+                    "&:hover": {
+                      background: "rgba(46, 204, 113, 0.6)",
+                    },
                   },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#2ecc71",
-                  },
-                  backgroundColor: "rgba(26, 26, 26, 0.5)",
-                },
-              }}
-            />
-            <TextField
-              label="Dot 2 Color"
-              name="dot2Color"
-              value={formValues.dot2Color}
-              onChange={handleChange}
-              InputProps={{
-                sx: {
-                  color: "#ffffff",
-                  "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
-                },
-              }}
-              InputLabelProps={{
-                sx: {
-                  color: "rgba(255, 255, 255, 0.7)",
-                  "&.Mui-focused": {
-                    color: "#2ecc71",
-                  },
-                },
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  "& fieldset": {
-                    borderColor: "rgba(46, 204, 113, 0.3)",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "rgba(46, 204, 113, 0.5)",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#2ecc71",
-                  },
-                  backgroundColor: "rgba(26, 26, 26, 0.5)",
-                },
-              }}
-            />
-            <TextField
-              label="Dot 3 Color"
-              name="dot3Color"
-              value={formValues.dot3Color}
-              onChange={handleChange}
-              InputProps={{
-                sx: {
-                  color: "#ffffff",
-                  "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
-                },
-              }}
-              InputLabelProps={{
-                sx: {
-                  color: "rgba(255, 255, 255, 0.7)",
-                  "&.Mui-focused": {
-                    color: "#2ecc71",
-                  },
-                },
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  "& fieldset": {
-                    borderColor: "rgba(46, 204, 113, 0.3)",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "rgba(46, 204, 113, 0.5)",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#2ecc71",
-                  },
-                  backgroundColor: "rgba(26, 26, 26, 0.5)",
-                },
-              }}
-            />
-            <TextField
-              label="Dot 4 Color"
-              name="dot4Color"
-              value={formValues.dot4Color}
-              onChange={handleChange}
-              InputProps={{
-                sx: {
-                  color: "#ffffff",
-                  "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
-                },
-              }}
-              InputLabelProps={{
-                sx: {
-                  color: "rgba(255, 255, 255, 0.7)",
-                  "&.Mui-focused": {
-                    color: "#2ecc71",
-                  },
-                },
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  "& fieldset": {
-                    borderColor: "rgba(46, 204, 113, 0.3)",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "rgba(46, 204, 113, 0.5)",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#2ecc71",
-                  },
-                  backgroundColor: "rgba(26, 26, 26, 0.5)",
-                },
-              }}
-            />
-            <TextField
-              label="Dot 5 Color"
-              name="dot5Color"
-              value={formValues.dot5Color}
-              onChange={handleChange}
-              InputProps={{
-                sx: {
-                  color: "#ffffff",
-                  "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
-                },
-              }}
-              InputLabelProps={{
-                sx: {
-                  color: "rgba(255, 255, 255, 0.7)",
-                  "&.Mui-focused": {
-                    color: "#2ecc71",
-                  },
-                },
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  "& fieldset": {
-                    borderColor: "rgba(46, 204, 113, 0.3)",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "rgba(46, 204, 113, 0.5)",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#2ecc71",
-                  },
-                  backgroundColor: "rgba(26, 26, 26, 0.5)",
-                },
-              }}
-            />
+                }}
+              >
+                <Stack spacing={2}>
+                  {formValues.dots.map((dot, index) => (
+                    <Paper
+                      key={index}
+                      sx={{
+                        p: 2,
+                        backgroundColor: "rgba(26, 26, 26, 0.5)",
+                        border: "1px solid rgba(46, 204, 113, 0.3)",
+                        borderRadius: 2,
+                      }}
+                    >
+                      <Stack spacing={2}>
+                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+                          <Typography variant="subtitle2" sx={{ color: "#ffffff", fontWeight: 600 }}>
+                            Dot {index + 1}
+                          </Typography>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleRemoveDot(index)}
+                            sx={{
+                              color: "#ff5252",
+                              "&:hover": {
+                                backgroundColor: "rgba(255, 82, 82, 0.1)",
+                              },
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Stack>
+
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Color"
+                          value={dot.color}
+                          onChange={(e) => handleDotChange(index, "color", e.target.value)}
+                          placeholder="e.g. #5ac8fa"
+                          InputProps={{
+                            sx: {
+                              color: "#ffffff",
+                              "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
+                            },
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <ColorSwatch
+                                  color={dot.color}
+                                  onChange={(fieldName, value) => handleDotColorChange(index, value)}
+                                  fieldName={`dot${index}Color`}
+                                />
+                              </InputAdornment>
+                            ),
+                          }}
+                          InputLabelProps={{
+                            sx: {
+                              color: "rgba(255, 255, 255, 0.7)",
+                              "&.Mui-focused": {
+                                color: "#2ecc71",
+                              },
+                            },
+                          }}
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              "& fieldset": {
+                                borderColor: "rgba(46, 204, 113, 0.3)",
+                              },
+                              "&:hover fieldset": {
+                                borderColor: "rgba(46, 204, 113, 0.5)",
+                              },
+                              "&.Mui-focused fieldset": {
+                                borderColor: "#2ecc71",
+                              },
+                              backgroundColor: "rgba(255,255,255,0.05)",
+                            },
+                          }}
+                        />
+
+                        <Stack direction="row" spacing={2}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            type="text"
+                            label="Size"
+                            value={dot.size}
+                            onChange={(e) => handleDotChange(index, "size", e.target.value)}
+                            placeholder="e.g. 36"
+                            InputProps={{
+                              sx: {
+                                color: "#ffffff",
+                                "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
+                              },
+                            }}
+                            InputLabelProps={{
+                              sx: {
+                                color: "rgba(255, 255, 255, 0.7)",
+                                "&.Mui-focused": {
+                                  color: "#2ecc71",
+                                },
+                              },
+                            }}
+                            sx={{
+                              "& .MuiOutlinedInput-root": {
+                                "& fieldset": {
+                                  borderColor: "rgba(46, 204, 113, 0.3)",
+                                },
+                                "&:hover fieldset": {
+                                  borderColor: "rgba(46, 204, 113, 0.5)",
+                                },
+                                "&.Mui-focused fieldset": {
+                                  borderColor: "#2ecc71",
+                                },
+                                backgroundColor: "rgba(255,255,255,0.05)",
+                              },
+                            }}
+                          />
+
+                          <TextField
+                            fullWidth
+                            size="small"
+                            type="text"
+                            label="Score"
+                            value={dot.score}
+                            onChange={(e) => handleDotChange(index, "score", e.target.value)}
+                            placeholder="e.g. 0"
+                            InputProps={{
+                              sx: {
+                                color: "#ffffff",
+                                "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
+                              },
+                            }}
+                            InputLabelProps={{
+                              sx: {
+                                color: "rgba(255, 255, 255, 0.7)",
+                                "&.Mui-focused": {
+                                  color: "#2ecc71",
+                                },
+                              },
+                            }}
+                            sx={{
+                              "& .MuiOutlinedInput-root": {
+                                "& fieldset": {
+                                  borderColor: "rgba(46, 204, 113, 0.3)",
+                                },
+                                "&:hover fieldset": {
+                                  borderColor: "rgba(46, 204, 113, 0.5)",
+                                },
+                                "&.Mui-focused fieldset": {
+                                  borderColor: "#2ecc71",
+                                },
+                                backgroundColor: "rgba(255,255,255,0.05)",
+                              },
+                            }}
+                          />
+                        </Stack>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Stack>
+              </Box>
+            )}
           </Stack>
+
+          <Divider sx={{ borderColor: "rgba(46, 204, 113, 0.2)" }} />
 
           <Stack spacing={1.5}>
             <Typography variant="subtitle2" sx={{ color: "rgba(255, 255, 255, 0.8)" }}>
@@ -584,4 +854,3 @@ export default function NewLevelDialog({
     </Dialog>
   );
 }
-

@@ -1,6 +1,6 @@
-## DotBack Admin Dashboard
+## PerkTap Admin Dashboard
 
-DotBack is a single-page administrative dashboard built with Next.js (App Router) and Material UI. It lets an administrator configure 10 DotBack levels, each with custom background colors, dot palettes, and branded logos. 
+PerkTap is a single-page administrative dashboard built with Next.js (App Router) and Material UI. It lets an administrator configure 10 PerkTap levels, each with custom background colors, dot palettes, and branded logos. 
 
 **Note:** The backend has been separated into a standalone Node.js/Express server. See `BACKEND_MIGRATION.md` for details.
 

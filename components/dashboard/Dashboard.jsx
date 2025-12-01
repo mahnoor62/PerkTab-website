@@ -696,7 +696,7 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
                 sx={{ color: "rgba(255, 255, 255, 0.7)" }}
               >
                 Manage the color system, dot palette, and branding for every
-                DotBack level. Updates are persisted instantly in MongoDB.
+                PerkTap level. Updates are persisted instantly in MongoDB.
               </Typography>
             </Stack>
 

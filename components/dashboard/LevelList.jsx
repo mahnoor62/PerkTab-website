@@ -33,9 +33,13 @@ function LevelBadge({ level }) {
 }
 
 function DotPreview({ colors }) {
+  const maxDots = 8;
+  const displayColors = colors.slice(0, maxDots);
+  const hasMore = colors.length > maxDots;
+  
   return (
-    <Stack direction="row" spacing={1}>
-      {colors.map((color, idx) => (
+    <Stack direction="row" spacing={1} alignItems="center">
+      {displayColors.map((color, idx) => (
         <Tooltip title={color || "Not set"} key={idx}>
           <Box
             sx={{
@@ -49,6 +53,18 @@ function DotPreview({ colors }) {
           />
         </Tooltip>
       ))}
+      {hasMore && (
+        <Typography
+          variant="caption"
+          sx={{
+            color: "rgba(255, 255, 255, 0.6)",
+            ml: 0.5,
+            fontSize: "0.75rem",
+          }}
+        >
+          ...
+        </Typography>
+      )}
     </Stack>
   );
 }
@@ -131,9 +147,10 @@ export default function LevelList({
       >
         {levels.map((level) => {
         const isSelected = level.level === selectedLevel;
-        const dotColors = [1, 2, 3, 4, 5].map(
-          (dotIdx) => level[`dot${dotIdx}Color`]
-        );
+        // Get dot colors from the dots array dynamically
+        const dotColors = Array.isArray(level.dots) 
+          ? level.dots.map((dot) => dot.color)
+          : [];
         return (
           <Card
             key={level.level}
@@ -191,7 +208,7 @@ export default function LevelList({
                   )}
                 </Box>
 
-                <Box>
+                {/* <Box>
                   <Typography
                     variant="caption"
                     sx={{ textTransform: "uppercase", letterSpacing: 0.6, color: "rgba(255, 255, 255, 0.55)" }}
@@ -201,7 +218,22 @@ export default function LevelList({
                   <Box sx={{ mt: 0.5 }}>
                     <DotPreview colors={dotColors} />
                   </Box>
-                </Box>
+                </Box> */}
+                
+                {/* Show all dots dynamically */}
+                {dotColors.length > 0 && (
+                  <Box>
+                    <Typography
+                      variant="caption"
+                      sx={{ textTransform: "uppercase", letterSpacing: 0.6, color: "rgba(255, 255, 255, 0.55)" }}
+                    >
+                      Dots ({dotColors.length})
+                    </Typography>
+                    <Box sx={{ mt: 0.5 }}>
+                      <DotPreview colors={dotColors} />
+                    </Box>
+                  </Box>
+                )}
 
                 <Typography variant="caption" sx={{ color: "rgba(255, 255, 255, 0.6)" }}>
                   Last updated: {formatUpdatedAt(level.updatedAt)}
