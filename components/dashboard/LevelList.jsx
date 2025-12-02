@@ -9,8 +9,10 @@ import {
   Tooltip,
   Divider,
   Fab,
+  IconButton,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 function LevelBadge({ level }) {
   return (
@@ -87,6 +89,7 @@ export default function LevelList({
   selectedLevel,
   onSelectLevel,
   onAddClick,
+  onDeleteLevel,
   canAddMoreLevels = true,
 }) {
   if (!levels.length) {
@@ -169,8 +172,39 @@ export default function LevelList({
                 ? "0 18px 30px rgba(233, 226, 36, 0.3), 0 0 0 1px rgba(233, 226, 36, 0.2)"
                 : "0 8px 18px rgba(0, 0, 0, 0.3)",
               minWidth: 0,
+              position: "relative",
             }}
           >
+            <Box
+              sx={{
+                position: "absolute",
+                top: 10,
+                right: 20,
+                zIndex: 10,
+              }}
+            >
+              <Tooltip title="Delete level">
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onDeleteLevel) {
+                      onDeleteLevel(level.level);
+                    }
+                  }}
+                  sx={{
+                    color: "#ff5252",
+                    backgroundColor: "rgba(255, 82, 82, 0.1)",
+                    "&:hover": {
+                      backgroundColor: "rgba(255, 82, 82, 0.2)",
+                      color: "#ff1744",
+                    },
+                  }}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
             <CardActionArea
               onClick={() => onSelectLevel(level.level)}
               sx={{

@@ -447,6 +447,10 @@ import {
   CardContent,
   Chip,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   LinearProgress,
   Paper,
   Snackbar,
@@ -484,6 +488,9 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [isCreatingLevel, setIsCreatingLevel] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [levelToDelete, setLevelToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const canAddMoreLevels = levels.length < MAX_LEVELS;
 
@@ -621,6 +628,57 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
       throw error;
     } finally {
       setIsCreatingLevel(false);
+    }
+  };
+
+  // 🔹 Delete Level - Open confirmation dialog
+  const handleDeleteLevel = (levelNumber) => {
+    setLevelToDelete(levelNumber);
+    setDeleteDialogOpen(true);
+  };
+
+  // 🔹 Confirm Delete Level
+  const handleConfirmDelete = async () => {
+    if (!levelToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await fetchJson(`/api/levels/${levelToDelete}`, {
+        method: "DELETE",
+      });
+
+      // Remove deleted level from list and update selection
+      setLevels((prev) => {
+        const updated = prev.filter((lvl) => lvl.level !== levelToDelete).sort((a, b) => a.level - b.level);
+        
+        // If deleted level was selected, select first available level or null
+        if (selectedLevel === levelToDelete) {
+          if (updated.length > 0) {
+            setSelectedLevel(updated[0].level);
+          } else {
+            setSelectedLevel(null);
+          }
+        }
+        
+        return updated;
+      });
+
+      setDeleteDialogOpen(false);
+      setLevelToDelete(null);
+
+      setAlertState({
+        open: true,
+        severity: "success",
+        message: `Level ${levelToDelete} deleted successfully.`,
+      });
+    } catch (error) {
+      setAlertState({
+        open: true,
+        severity: "error",
+        message: error.message || "Unable to delete level.",
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -836,6 +894,7 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
                       selectedLevel={selectedLevel}
                       onSelectLevel={handleSelectLevel}
                       onAddClick={() => setCreateDialogOpen(true)}
+                      onDeleteLevel={handleDeleteLevel}
                       canAddMoreLevels={canAddMoreLevels}
                     />
                   </Box>
@@ -904,6 +963,64 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
         onUploadLogo={handleUploadLogo}
         isUploadingLogo={isUploadingLogo}
       />
+
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => !isDeleting && setDeleteDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            background:
+              "linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(233, 226, 36, 0.08), rgba(26, 188, 156, 0.1))",
+            border: "1px solid rgba(233, 226, 36, 0.3)",
+            boxShadow:
+              "0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(233, 226, 36, 0.1), 0 0 40px rgba(233, 226, 36, 0.1)",
+          },
+        }}
+      >
+        <DialogTitle sx={{ pb: 2, borderBottom: "1px solid rgba(233, 226, 36, 0.2)", color: "#ffffff" }}>
+          Confirm Delete
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
+          <Typography sx={{ color: "rgba(255, 255, 255, 0.9)" }}>
+            Are you sure you want to delete <strong>Level {levelToDelete}</strong>? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, borderTop: "1px solid rgba(233, 226, 36, 0.2)" }}>
+          <Button
+            onClick={() => {
+              setDeleteDialogOpen(false);
+              setLevelToDelete(null);
+            }}
+            disabled={isDeleting}
+            sx={{
+              color: "rgba(255, 255, 255, 0.7)",
+              "&:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            disabled={isDeleting}
+            variant="contained"
+            sx={{
+              background: "linear-gradient(135deg, #e74c3c, #c0392b)",
+              "&:hover": {
+                background: "linear-gradient(135deg, #c0392b, #a93226)",
+              },
+              "&:disabled": {
+                background: "rgba(231, 76, 60, 0.3)",
+              },
+            }}
+          >
+            {isDeleting ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
