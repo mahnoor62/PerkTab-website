@@ -18,7 +18,35 @@ export default function LevelPreview({ level }) {
   }
 
   const dots = Array.isArray(level.dots) ? level.dots : [];
-  const backgroundColor = level.backgroundColor?.trim() || "#e9e224";
+  // Determine background type: if background starts with http, https, or /uploads/, it's an image URL; otherwise it's a color
+  const background = level.background?.trim() || "#e9e224";
+  
+  // Check if it's an image URL (starts with http, https, or /uploads/)
+  // Exclude hex colors and common color formats
+  const isImageUrl = background && 
+    !background.startsWith("#") && 
+    !background.match(/^rgba?\(/) &&
+    (background.startsWith("http://") || 
+     background.startsWith("https://") || 
+     background.startsWith("/uploads/") ||
+     background.startsWith("/"));
+  
+  const backgroundColor = isImageUrl ? "transparent" : background;
+  // Get full URL for background image using getLogoUrl to format it properly
+  // If getLogoUrl returns null, fall back to the original background value
+  const formattedUrl = isImageUrl && background ? getLogoUrl(background) : null;
+  const backgroundImageUrl = formattedUrl || (isImageUrl ? background : "");
+  
+  // Debug logging
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[LevelPreview] Background:', {
+      background,
+      isImageUrl,
+      backgroundImageUrl,
+      formattedUrl,
+      levelBackground: level.background
+    });
+  }
   
   // Parse dot sizes
   const parseSize = (sizeStr) => {
@@ -140,8 +168,19 @@ export default function LevelPreview({ level }) {
             height: "100%",
             borderRadius: 3,
             overflow: "hidden",
-            backgroundColor: backgroundColor,
+            backgroundColor: isImageUrl ? "transparent" : backgroundColor,
+            backgroundImage: isImageUrl && backgroundImageUrl 
+              ? `url("${backgroundImageUrl}")` 
+              : "none",
+            backgroundSize: isImageUrl ? "cover" : "auto",
+            backgroundPosition: isImageUrl ? "center" : "top left",
+            backgroundRepeat: isImageUrl ? "no-repeat" : "repeat",
             position: "relative",
+            // Ensure background image covers the entire area
+            ...(isImageUrl && backgroundImageUrl && {
+              backgroundAttachment: "scroll",
+              minHeight: "100%",
+            }),
           }}
         >
           {dots.map((dot, idx) => {
@@ -182,7 +221,7 @@ export default function LevelPreview({ level }) {
             );
           })}
 
-          {level.logoUrl && (
+          {level.logoUrl && !isImageUrl && (
             <Box
               component="img"
               src={getLogoUrl(level.logoUrl)}

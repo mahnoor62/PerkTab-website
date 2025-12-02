@@ -596,6 +596,58 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
     }
   };
 
+  // 🔹 Background image upload handler
+  const handleUploadBackgroundImage = async (file) => {
+    setIsUploadingLogo(true); // Reuse the same loading state
+    try {
+      const data = await uploadFile(file);
+      setAlertState({
+        open: true,
+        severity: "success",
+        message: "Background image uploaded successfully.",
+      });
+      return data.url;
+    } catch (error) {
+      // Extract the actual error message from the error object
+      let errorMessage = "Background image upload failed.";
+      
+      if (error?.response?.data?.message) {
+        // Backend returned a specific error message
+        errorMessage = error.response.data.message;
+      } else if (error?.response?.data?.error) {
+        // Backend returned error in 'error' field
+        errorMessage = error.response.data.error;
+      } else if (error?.message) {
+        // Error object has a message property
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        // Error is a string
+        errorMessage = error;
+      } else if (error?.response?.status) {
+        // HTTP error status
+        const status = error.response.status;
+        if (status === 400) {
+          errorMessage = "Invalid file. Please upload a valid PNG or JPG image.";
+        } else if (status === 401) {
+          errorMessage = "Unauthorized. Please log in again.";
+        } else if (status === 413) {
+          errorMessage = "File too large. Please upload a smaller image.";
+        } else if (status === 500) {
+          errorMessage = error?.response?.data?.message || "Server error. Please try again later.";
+        } else {
+          errorMessage = `Upload failed with status ${status}. Please try again.`;
+        }
+      }
+      
+      // Throw error with proper message - let the component handle displaying it
+      const uploadError = new Error(errorMessage);
+      uploadError.status = error?.response?.status;
+      throw uploadError;
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
+
   // 🔹 Add Level – backend 1–10 me se next free level choose karega
   const handleCreateLevel = async (payload = {}) => {
     setIsCreatingLevel(true);
@@ -924,6 +976,8 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
                         isSaving={isSaving}
                         isUploadingLogo={isUploadingLogo}
                         onUploadLogo={handleUploadLogo}
+                        onUploadBackgroundImage={handleUploadBackgroundImage}
+                        isUploadingBackgroundImage={isUploadingLogo}
                       />
                       <LevelPreview level={selectedLevelData} />
                     </CardContent>
@@ -958,6 +1012,9 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
         isSubmitting={isCreatingLevel}
         onUploadLogo={handleUploadLogo}
         isUploadingLogo={isUploadingLogo}
+        existingLevels={levels}
+        onUploadBackgroundImage={handleUploadBackgroundImage}
+        isUploadingBackgroundImage={isUploadingLogo}
       />
 
       <Dialog
