@@ -191,6 +191,10 @@ export default function NewLevelDialog({
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormValues((prev) => ({ ...prev, [name]: value }));
+    // Clear error when user changes level number
+    if (name === "level") {
+      setError(null);
+    }
   };
 
   const handleAddDot = () => {

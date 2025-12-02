@@ -620,11 +620,7 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
 
       return created;
     } catch (error) {
-      setAlertState({
-        open: true,
-        severity: "error",
-        message: error.message || "Unable to create level.",
-      });
+      // Re-throw error so NewLevelDialog can catch and display it
       throw error;
     } finally {
       setIsCreatingLevel(false);
