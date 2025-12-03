@@ -37,22 +37,27 @@ const PREDEFINED_COLORS = [
   { color: "#000000", score: 20 },   // black
 ];
 
-// Predefined dot sizes with default scores
+// Predefined dot sizes with default scores - in sequence: Extra Small, Small, Medium, Large, Extra Large
 const PREDEFINED_DOT_SIZES = [
-  { size: "extra small", score: 10 },
-  { size: "small", score: 7 },
-  { size: "medium", score: 5 },
-  { size: "large", score: 3 },
-  { size: "extra large", score: 1 },
+  { size: "Extra Small", score: 10 },
+  { size: "Small", score: 7 },
+  { size: "Medium", score: 5 },
+  { size: "Large", score: 3 },
+  { size: "Extra Large", score: 1 },
 ];
 
 // Map size names to pixel values for UI display
 const SIZE_TO_PIXELS = {
   "extra small": 20,
-  "small": 40,
-  "medium": 60,
-  "large": 80,
-  "extra large": 100,
+  "Extra Small": 20,
+  "small": 28,
+  "Small": 28,
+  "medium": 36,
+  "Medium": 36,
+  "large": 48,
+  "Large": 48,
+  "extra large": 60,
+  "Extra Large": 60,
 };
 
 // Get a random color from the colors array
@@ -67,6 +72,47 @@ function getRandomColor(colors) {
 // Get size name based on index (cycles through sizes)
 function getSizeNameForDot(dotIndex) {
   return PREDEFINED_DOT_SIZES[dotIndex % PREDEFINED_DOT_SIZES.length].size;
+}
+
+// Get size order for sorting (Extra Small = 1, Small = 2, Medium = 3, Large = 4, Extra Large = 5)
+function getSizeOrderForSort(sizeStr) {
+  if (!sizeStr) return 3; // Default to Medium
+  const sizeNameLower = String(sizeStr).trim().toLowerCase();
+  
+  if (sizeNameLower === "extra small" || sizeNameLower === "extrasmall" || sizeNameLower.includes("extra small")) {
+    return 1; // Extra Small - first
+  } else if (sizeNameLower === "small") {
+    return 2; // Small - second
+  } else if (sizeNameLower === "medium") {
+    return 3; // Medium - third
+  } else if (sizeNameLower === "large") {
+    return 4; // Large - fourth
+  } else if (sizeNameLower === "extra large" || sizeNameLower === "extralarge" || sizeNameLower.includes("extra large")) {
+    return 5; // Extra Large - fifth
+  }
+  return 3; // Default to Medium
+}
+
+// Sort dot sizes array in sequence: Extra Small -> Small -> Medium -> Large -> Extra Large
+function sortDotSizes(dotSizes) {
+  if (!Array.isArray(dotSizes) || dotSizes.length === 0) return dotSizes;
+  
+  return [...dotSizes].sort((a, b) => {
+    const orderA = getSizeOrderForSort(a?.size);
+    const orderB = getSizeOrderForSort(b?.size);
+    return orderA - orderB;
+  });
+}
+
+// Capitalize size name for display (e.g., "extra small" -> "Extra Small")
+function capitalizeSizeName(sizeStr) {
+  if (!sizeStr) return "";
+  const str = String(sizeStr).trim();
+  // Split by space and capitalize each word
+  return str
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 }
 
 function ColorSwatch({ color, onChange, fieldName }) {
@@ -288,7 +334,7 @@ export default function LevelEditor({
       const safeColors = initializedColors.length > 0 ? initializedColors : [...PREDEFINED_COLORS];
       
       // Initialize dotSizes array - filter out null/undefined elements
-      const initializedDotSizes = Array.isArray(level.dotSizes) && level.dotSizes.length > 0
+      let initializedDotSizes = Array.isArray(level.dotSizes) && level.dotSizes.length > 0
         ? level.dotSizes
             .filter((s) => s != null && (s.size != null || s.size !== undefined))
             .map((s) => ({
@@ -297,17 +343,36 @@ export default function LevelEditor({
             }))
         : [...PREDEFINED_DOT_SIZES];
       
+      // Sort dot sizes in sequence: Extra Small -> Small -> Medium -> Large -> Extra Large
+      initializedDotSizes = sortDotSizes(initializedDotSizes);
+      
       // Ensure dotSizes array is never empty
       const safeDotSizes = initializedDotSizes.length > 0 ? initializedDotSizes : [...PREDEFINED_DOT_SIZES];
       
-      // Initialize dots with color and colorScore - filter out null/undefined elements
+      // Initialize dots with color, colorScore, and size - filter out null/undefined elements
+      // Assign sizes in sequence: Extra Small -> Small -> Medium -> Large -> Extra Large
       const initializedDots = Array.isArray(level.dots) && level.dots.length > 0
         ? level.dots
             .filter((dot) => dot != null)
-            .map((dot) => ({
-              color: String(dot?.color || ""),
-              colorScore: typeof dot?.colorScore === 'number' ? dot.colorScore : (Number(dot?.colorScore) || 0),
-            }))
+            .map((dot, index) => {
+              // If dot doesn't have a size, assign one from dotSizes array in sequence
+              let dotSize = dot?.size || "";
+              if (!dotSize && safeDotSizes.length > 0) {
+                // Cycle through sizes in order: Extra Small, Small, Medium, Large, Extra Large
+                const sizeIndex = index % safeDotSizes.length;
+                dotSize = safeDotSizes[sizeIndex].size;
+              } else if (!dotSize) {
+                // Fallback to predefined sizes in sequence
+                const sizeIndex = index % PREDEFINED_DOT_SIZES.length;
+                dotSize = PREDEFINED_DOT_SIZES[sizeIndex].size;
+              }
+              
+              return {
+                color: String(dot?.color || ""),
+                colorScore: typeof dot?.colorScore === 'number' ? dot.colorScore : (Number(dot?.colorScore) || 0),
+                size: String(dotSize),
+              };
+            })
         : [];
       
       // Determine if background is a color or image URL
@@ -521,13 +586,26 @@ export default function LevelEditor({
           score: typeof c.score === 'number' ? c.score : (Number(c.score) || 0),
         }));
       
+      // Get dot sizes from the form values (dotSizes array)
+      const validDotSizes = (prev.dotSizes || [])
+        .filter((s) => s != null && s.size != null && String(s.size).trim() !== "")
+        .map((s) => ({
+          size: String(s.size || "").trim(),
+          score: typeof s.score === 'number' ? s.score : (Number(s.score) || 0),
+        }));
+      
+      // Use predefined sizes if no sizes available
+      const availableDotSizes = validDotSizes.length > 0 ? validDotSizes : PREDEFINED_DOT_SIZES;
+      
       // Ensure we have valid colors from the colors array
       if (validColors.length === 0) {
         console.warn("[handleAddDot] No valid colors in colors array, using predefined colors");
         const fallbackColors = PREDEFINED_COLORS;
         const currentDotIndex = (prev.dots || []).length;
         const colorIndex = currentDotIndex % fallbackColors.length;
+        const sizeIndex = currentDotIndex % availableDotSizes.length;
         const selectedColorItem = fallbackColors[colorIndex];
+        const selectedSizeItem = availableDotSizes[sizeIndex];
         
         const newValues = {
           ...prev,
@@ -536,6 +614,7 @@ export default function LevelEditor({
             {
               color: selectedColorItem.color,
               colorScore: selectedColorItem.score || 0,
+              size: selectedSizeItem.size,
             },
           ],
         };
@@ -543,10 +622,12 @@ export default function LevelEditor({
         return newValues;
       }
       
-      // Cycle through colors from the colors array evenly (round-robin)
+      // Cycle through colors and sizes from their respective arrays evenly (round-robin)
       const currentDotIndex = (prev.dots || []).length;
       const colorIndex = currentDotIndex % validColors.length;
+      const sizeIndex = currentDotIndex % availableDotSizes.length;
       const selectedColorItem = validColors[colorIndex];
+      const selectedSizeItem = availableDotSizes[sizeIndex];
       
       // Ensure color is always a string
       const selectedColor = String(selectedColorItem?.color || "").trim();
@@ -562,6 +643,7 @@ export default function LevelEditor({
           {
             color: selectedColor,
             colorScore: colorScore,
+            size: selectedSizeItem.size,
           },
         ],
       };
@@ -1600,7 +1682,7 @@ export default function LevelEditor({
               }}
             >
               <Stack spacing={1.5}>
-                {(formValues.dotSizes || [])
+                {sortDotSizes(formValues.dotSizes || [])
                   .filter((s) => s != null && s.size != null)
                   .map((sizeItem, originalIndex) => {
                     const actualIndex = (formValues.dotSizes || []).findIndex((s, i) => 
@@ -1627,7 +1709,7 @@ export default function LevelEditor({
                           fullWidth
                           size="small"
                           label="Size"
-                          value={sizeItem?.size || ""}
+                          value={capitalizeSizeName(sizeItem?.size || "")}
                           disabled
                       InputProps={{
                         sx: {
@@ -2086,7 +2168,7 @@ export default function LevelEditor({
                     }}
                   >
                     <Stack spacing={1.5}>
-                      {(formValues.dotSizes || [])
+                      {sortDotSizes(formValues.dotSizes || [])
                         .filter((s) => s != null && s.size != null)
                         .map((sizeItem, originalIndex) => {
                           const actualIndex = (formValues.dotSizes || []).findIndex((s, i) => 
@@ -2113,7 +2195,7 @@ export default function LevelEditor({
                                 fullWidth
                                 size="small"
                                 label="Size"
-                                value={sizeItem?.size || ""}
+                                value={capitalizeSizeName(sizeItem?.size || "")}
                                 disabled
                                 InputProps={{
                                   sx: {

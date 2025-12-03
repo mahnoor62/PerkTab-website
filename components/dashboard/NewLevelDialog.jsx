@@ -98,6 +98,17 @@ function getSizeNameForDot(dotIndex) {
   return PREDEFINED_DOT_SIZES[dotIndex % PREDEFINED_DOT_SIZES.length].size;
 }
 
+// Capitalize size name for display (e.g., "extra small" -> "Extra Small")
+function capitalizeSizeName(sizeStr) {
+  if (!sizeStr) return "";
+  const str = String(sizeStr).trim();
+  // Split by space and capitalize each word
+  return str
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
 const defaultFormState = {
   level: "",
   backgroundColor: "#f4f9ff",
@@ -467,6 +478,14 @@ export default function NewLevelDialog({
     setFormValues((prev) => ({ ...prev, [fieldName]: value }));
   };
 
+
+  // Prevent form submission when pressing Enter in color or dot size fields
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  };
 
   const handleFileChange = async (event) => {
     const file = event.target.files?.[0];
@@ -1089,6 +1108,7 @@ export default function NewLevelDialog({
                             label="Color"
                             value={colorItem.color}
                             onChange={(e) => handleColorChange(index, "color", e.target.value)}
+                            onKeyDown={handleKeyDown}
                             InputProps={{
                               sx: {
                                 color: "#ffffff",
@@ -1124,6 +1144,7 @@ export default function NewLevelDialog({
                             label="Score"
                             value={colorItem.score}
                             onChange={(e) => handleColorChange(index, "score", e.target.value)}
+                            onKeyDown={handleKeyDown}
                             sx={{
                               width: 100,
                               "& .MuiOutlinedInput-root": {
@@ -1214,7 +1235,7 @@ export default function NewLevelDialog({
                             fullWidth
                             size="small"
                             label="Size"
-                            value={sizeItem.size}
+                            value={capitalizeSizeName(sizeItem.size)}
                             disabled
                             InputProps={{
                               sx: {
@@ -1244,6 +1265,7 @@ export default function NewLevelDialog({
                             label="Score"
                             value={sizeItem.score}
                             onChange={(e) => handleDotSizeChange(index, "score", e.target.value)}
+                            onKeyDown={handleKeyDown}
                             sx={{
                               width: 100,
                               "& .MuiOutlinedInput-root": {

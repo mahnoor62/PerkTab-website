@@ -934,7 +934,7 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
                   <Box
                     sx={{
                       height: "calc(100vh - 220px)",
-                      minHeight: "760px",
+                      minHeight: "1280px", // Increased to show at least 6 levels (6 cards * ~150px + gaps)
                       overflowY: "auto",
                       overflowX: "hidden",
                       pr: 1,

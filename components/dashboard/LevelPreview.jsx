@@ -20,12 +20,14 @@ export default function LevelPreview({ level, formValues = null }) {
   // Use formValues if provided for real-time preview, otherwise use level data
   const previewData = formValues ? {
     dots: formValues.dots || level.dots || [],
+    dotSizes: formValues.dotSizes || level.dotSizes || [],
     background: formValues.backgroundType === "image" 
       ? formValues.backgroundImageUrl 
       : formValues.backgroundColor || level.background || "",
     logoUrl: formValues.backgroundType === "image" ? "" : (formValues.logoUrl || level.logoUrl || ""),
   } : {
     dots: level.dots || [],
+    dotSizes: level.dotSizes || [],
     background: level.background || "",
     logoUrl: level.logoUrl || "",
   };
@@ -61,12 +63,98 @@ export default function LevelPreview({ level, formValues = null }) {
     });
   }
   
-  // Parse dot sizes
-  const parseSize = (sizeStr) => {
-    if (!sizeStr) return 36;
-    const num = parseFloat(sizeStr);
-    return isNaN(num) ? 36 : Math.max(num, 20);
+  // Get dot sizes mapping from dotSizes array
+  const dotSizesMap = {};
+  const dotSizesArray = Array.isArray(previewData.dotSizes) ? previewData.dotSizes : [];
+  dotSizesArray.forEach((sizeItem) => {
+    if (sizeItem && sizeItem.size) {
+      const sizeName = String(sizeItem.size).trim();
+      const sizeNameLower = sizeName.toLowerCase();
+      
+      // Try to parse as number (if it's a pixel value like "36" or "36px")
+      let sizeValue = parseFloat(sizeItem.size);
+      if (isNaN(sizeValue)) {
+        // Map size names to pixel values (in sequence: Extra Small -> Small -> Medium -> Large -> Extra Large)
+        if (sizeNameLower === "extra small" || sizeNameLower === "extrasmall" || sizeNameLower.includes("extra small")) {
+          sizeValue = 20; // Extra Small - smallest
+        } else if (sizeNameLower === "small") {
+          sizeValue = 28; // Small
+        } else if (sizeNameLower === "medium") {
+          sizeValue = 36; // Medium
+        } else if (sizeNameLower === "large") {
+          sizeValue = 48; // Large
+        } else if (sizeNameLower === "extra large" || sizeNameLower === "extralarge" || sizeNameLower.includes("extra large")) {
+          sizeValue = 60; // Extra Large - largest
+        } else {
+          sizeValue = 36; // Default to Medium
+        }
+      }
+      // Store both lowercase and original case versions
+      dotSizesMap[sizeNameLower] = Math.max(sizeValue, 20);
+      dotSizesMap[sizeName] = Math.max(sizeValue, 20);
+    }
+  });
+
+  // Parse dot sizes - first try to match from dotSizes array, then fallback to parsing
+  const parseSize = (sizeStr, dotSizeName = null) => {
+    // If we have a size name, try to match it in dotSizesMap first
+    if (dotSizeName) {
+      const sizeNameKey = String(dotSizeName).trim().toLowerCase();
+      if (dotSizesMap[sizeNameKey]) {
+        return dotSizesMap[sizeNameKey];
+      }
+    }
+    
+    // Try to parse the size string directly
+    if (sizeStr) {
+      const sizeNameKey = String(sizeStr).trim().toLowerCase();
+      if (dotSizesMap[sizeNameKey]) {
+        return dotSizesMap[sizeNameKey];
+      }
+      const num = parseFloat(sizeStr);
+      if (!isNaN(num)) {
+        return Math.max(num, 20);
+      }
+    }
+    
+    // Default size
+    return 36;
   };
+
+  // Get size order for sorting (Extra Small = 1, Small = 2, Medium = 3, Large = 4, Extra Large = 5)
+  const getSizeOrder = (sizeStr) => {
+    if (!sizeStr) return 3; // Default to Medium
+    const sizeNameLower = String(sizeStr).trim().toLowerCase();
+    
+    if (sizeNameLower === "extra small" || sizeNameLower === "extrasmall" || sizeNameLower.includes("extra small")) {
+      return 1; // Extra Small - first
+    } else if (sizeNameLower === "small") {
+      return 2; // Small - second
+    } else if (sizeNameLower === "medium") {
+      return 3; // Medium - third
+    } else if (sizeNameLower === "large") {
+      return 4; // Large - fourth
+    } else if (sizeNameLower === "extra large" || sizeNameLower === "extralarge" || sizeNameLower.includes("extra large")) {
+      return 5; // Extra Large - fifth
+    }
+    return 3; // Default to Medium
+  };
+
+  // Group dots in batches of 5 and sort each batch by size sequence
+  // Pattern: Extra Small -> Small -> Medium -> Large -> Extra Large (repeats every 5 dots)
+  const sortedDots = [];
+  const batchSize = 5;
+  
+  for (let i = 0; i < dots.length; i += batchSize) {
+    const batch = dots.slice(i, i + batchSize);
+    // Sort each batch by size order: Extra Small -> Small -> Medium -> Large -> Extra Large
+    const sortedBatch = batch.sort((a, b) => {
+      const orderA = getSizeOrder(a.size);
+      const orderB = getSizeOrder(b.size);
+      return orderA - orderB;
+    });
+    sortedDots.push(...sortedBatch);
+  }
 
   // Generate positions for dots arranged horizontally with horizontal gaps
   const getDotPositions = (dotsArray) => {
@@ -86,7 +174,8 @@ export default function LevelPreview({ level, formValues = null }) {
     const rows = [];
     
     dotsArray.forEach((dot) => {
-      const dotSize = parseSize(dot.size);
+      // Get size from dot.size (can be size name or pixel value)
+      const dotSize = parseSize(dot.size, dot.sizeName);
       const dotWidth = dotSize + (currentRow.length > 0 ? horizontalGap : 0);
       
       // Check if dot fits in current row
@@ -142,7 +231,7 @@ export default function LevelPreview({ level, formValues = null }) {
     return positions;
   };
 
-  const dotPositions = getDotPositions(dots);
+  const dotPositions = getDotPositions(sortedDots);
 
   return (
     <Stack spacing={2} alignItems="center">
@@ -196,28 +285,25 @@ export default function LevelPreview({ level, formValues = null }) {
             }),
           }}
         >
-          {dots.map((dot, idx) => {
-            const size = dot.size?.trim() || "36";
+          {sortedDots.map((dot, idx) => {
             const color = dot.color?.trim() || "rgba(255,255,255,0.4)";
             const position = dotPositions[idx] || { top: "50%", left: "50%" };
             
-            // Parse size - handle both numbers and CSS units
-            let sizeValue = size;
-            if (!isNaN(parseFloat(size)) && isFinite(size)) {
-              sizeValue = `${size}px`;
-            }
+            // Get size from dotSizes array or parse directly
+            const sizeValue = parseSize(dot.size, dot.sizeName);
+            const sizeValuePx = `${sizeValue}px`;
             
             return (
               <Box
                 key={idx}
                 sx={{
                   position: "absolute",
-                  width: sizeValue,
-                  height: sizeValue,
-                  minWidth: sizeValue,
-                  minHeight: sizeValue,
-                  maxWidth: sizeValue,
-                  maxHeight: sizeValue,
+                  width: sizeValuePx,
+                  height: sizeValuePx,
+                  minWidth: sizeValuePx,
+                  minHeight: sizeValuePx,
+                  maxWidth: sizeValuePx,
+                  maxHeight: sizeValuePx,
                   aspectRatio: "1/1",
                   borderRadius: "50%",
                   background: color,
