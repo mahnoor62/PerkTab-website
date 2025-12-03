@@ -442,10 +442,37 @@ export default function NewLevelDialog({
   };
 
   const handleRemoveColor = (index) => {
-    setFormValues((prev) => ({
-      ...prev,
-      colors: prev.colors.filter((_, i) => i !== index),
-    }));
+    setFormValues((prev) => {
+      // Ensure we don't remove the last color
+      const validColors = (prev.colors || []).filter((c) => c != null && c.color);
+      if (validColors.length <= 1) {
+        console.warn("[handleRemoveColor] Cannot remove the last color");
+        return prev;
+      }
+      
+      // Validate index
+      if (index < 0 || index >= validColors.length) {
+        console.warn(`[handleRemoveColor] Invalid index ${index}`);
+        return prev;
+      }
+      
+      // Get the color being deleted (normalize for comparison)
+      const deletedColor = String(validColors[index].color || "").trim().toLowerCase();
+      
+      // Filter out dots that use the deleted color
+      // Compare colors case-insensitively and after trimming
+      const remainingDots = (prev.dots || []).filter((dot) => {
+        if (!dot || !dot.color) return true; // Keep dots without color
+        const dotColor = String(dot.color || "").trim().toLowerCase();
+        return dotColor !== deletedColor;
+      });
+      
+      return {
+        ...prev,
+        colors: prev.colors.filter((_, i) => i !== index),
+        dots: remainingDots,
+      };
+    });
   };
 
   const handleDotSizeChange = (index, field, value) => {

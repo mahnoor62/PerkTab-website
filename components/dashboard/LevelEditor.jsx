@@ -865,9 +865,21 @@ export default function LevelEditor({
         return prev;
       }
       
+      // Get the color being deleted (normalize for comparison)
+      const deletedColor = String(validColors[index].color || "").trim().toLowerCase();
+      
+      // Filter out dots that use the deleted color
+      // Compare colors case-insensitively and after trimming
+      const remainingDots = (prev.dots || []).filter((dot) => {
+        if (!dot || !dot.color) return true; // Keep dots without color
+        const dotColor = String(dot.color || "").trim().toLowerCase();
+        return dotColor !== deletedColor;
+      });
+      
       const newValues = {
         ...prev,
         colors: validColors.filter((_, i) => i !== index),
+        dots: remainingDots,
       };
       autoSave(newValues);
       return newValues;

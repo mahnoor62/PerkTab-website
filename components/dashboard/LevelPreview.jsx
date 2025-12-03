@@ -121,40 +121,63 @@ export default function LevelPreview({ level, formValues = null }) {
     return 36;
   };
 
-  // Get size order for sorting (Extra Small = 1, Small = 2, Medium = 3, Large = 4, Extra Large = 5)
-  const getSizeOrder = (sizeStr) => {
-    if (!sizeStr) return 3; // Default to Medium
-    const sizeNameLower = String(sizeStr).trim().toLowerCase();
-    
-    if (sizeNameLower === "extra small" || sizeNameLower === "extrasmall" || sizeNameLower.includes("extra small")) {
-      return 1; // Extra Small - first
-    } else if (sizeNameLower === "small") {
-      return 2; // Small - second
-    } else if (sizeNameLower === "medium") {
-      return 3; // Medium - third
-    } else if (sizeNameLower === "large") {
-      return 4; // Large - fourth
-    } else if (sizeNameLower === "extra large" || sizeNameLower === "extralarge" || sizeNameLower.includes("extra large")) {
-      return 5; // Extra Large - fifth
-    }
-    return 3; // Default to Medium
+  // Simple seeded random number generator for consistent random assignment
+  const seededRandom = (seed) => {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
   };
 
-  // Group dots in batches of 5 and sort each batch by size sequence
-  // Pattern: Extra Small -> Small -> Medium -> Large -> Extra Large (repeats every 5 dots)
-  const sortedDots = [];
-  const batchSize = 5;
-  
-  for (let i = 0; i < dots.length; i += batchSize) {
-    const batch = dots.slice(i, i + batchSize);
-    // Sort each batch by size order: Extra Small -> Small -> Medium -> Large -> Extra Large
-    const sortedBatch = batch.sort((a, b) => {
-      const orderA = getSizeOrder(a.size);
-      const orderB = getSizeOrder(b.size);
-      return orderA - orderB;
-    });
-    sortedDots.push(...sortedBatch);
-  }
+  // Get random size from dotSizes array based on a seed
+  const getRandomSize = (seed) => {
+    if (dotSizesArray.length === 0) {
+      // Fallback to default sizes if dotSizes array is empty
+      const defaultSizes = [
+        { size: "Extra Small", score: 10 },
+        { size: "Small", score: 7 },
+        { size: "Medium", score: 5 },
+        { size: "Large", score: 3 },
+        { size: "Extra Large", score: 1 },
+      ];
+      const randomIndex = Math.floor(seededRandom(seed) * defaultSizes.length);
+      return defaultSizes[randomIndex].size;
+    }
+    const randomIndex = Math.floor(seededRandom(seed) * dotSizesArray.length);
+    return dotSizesArray[randomIndex]?.size || "Medium";
+  };
+
+  // Assign random sizes from dotSizes array to each dot
+  // Each dot gets a consistent random size based on its index
+  const dotsWithRandomSizes = dots.map((dot, idx) => {
+    // Use dot index as seed for consistent randomization
+    // This ensures the same dot always gets the same random size on re-render
+    const seed = idx + (dot.color || "").length + (level.level || 0) * 1000;
+    const randomSize = getRandomSize(seed);
+    
+    // Parse the random size to get pixel value
+    const sizeNameLower = String(randomSize).trim().toLowerCase();
+    let sizeValue = parseFloat(randomSize);
+    if (isNaN(sizeValue)) {
+      if (sizeNameLower === "extra small" || sizeNameLower === "extrasmall" || sizeNameLower.includes("extra small")) {
+        sizeValue = 20;
+      } else if (sizeNameLower === "small") {
+        sizeValue = 28;
+      } else if (sizeNameLower === "medium") {
+        sizeValue = 36;
+      } else if (sizeNameLower === "large") {
+        sizeValue = 48;
+      } else if (sizeNameLower === "extra large" || sizeNameLower === "extralarge" || sizeNameLower.includes("extra large")) {
+        sizeValue = 60;
+      } else {
+        sizeValue = 36; // Default to Medium
+      }
+    }
+    
+    return {
+      ...dot,
+      randomSize: randomSize,
+      randomSizePixels: sizeValue,
+    };
+  });
 
   // Generate positions for dots arranged horizontally with horizontal gaps
   const getDotPositions = (dotsArray) => {
@@ -174,8 +197,8 @@ export default function LevelPreview({ level, formValues = null }) {
     const rows = [];
     
     dotsArray.forEach((dot) => {
-      // Get size from dot.size (can be size name or pixel value)
-      const dotSize = parseSize(dot.size, dot.sizeName);
+      // Get size from randomSizePixels if available (for random sizing), otherwise parse from dot.size
+      const dotSize = dot.randomSizePixels || parseSize(dot.size, dot.sizeName);
       const dotWidth = dotSize + (currentRow.length > 0 ? horizontalGap : 0);
       
       // Check if dot fits in current row
@@ -231,7 +254,7 @@ export default function LevelPreview({ level, formValues = null }) {
     return positions;
   };
 
-  const dotPositions = getDotPositions(sortedDots);
+  const dotPositions = getDotPositions(dotsWithRandomSizes);
 
   return (
     <Stack spacing={2} alignItems="center">
@@ -285,12 +308,12 @@ export default function LevelPreview({ level, formValues = null }) {
             }),
           }}
         >
-          {sortedDots.map((dot, idx) => {
+          {dotsWithRandomSizes.map((dot, idx) => {
             const color = dot.color?.trim() || "rgba(255,255,255,0.4)";
             const position = dotPositions[idx] || { top: "50%", left: "50%" };
             
-            // Get size from dotSizes array or parse directly
-            const sizeValue = parseSize(dot.size, dot.sizeName);
+            // Use the random size assigned to this dot
+            const sizeValue = dot.randomSizePixels || 36;
             const sizeValuePx = `${sizeValue}px`;
             
             return (
