@@ -17,6 +17,7 @@ import {
   FormControlLabel,
   FormControl,
   FormLabel,
+  Grid,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -27,95 +28,45 @@ import { getLogoUrl } from "@/lib/logo";
 const helperText =
   "Accepts HEX, rgba(), hsl(), gradients or any valid CSS color.";
 
-// Predefined dot sizes that cycle: 20, 40, 60, 80, 100
-const PREDEFINED_DOT_SIZES = [20, 40, 60, 80, 100];
-
-// Predefined size scores that cycle: 10, 7, 5, 3, 1
-const PREDEFINED_SIZE_SCORES = [10, 7, 5, 3, 1];
-
-// Theme default colors that cycle when adding dots
-const THEME_DEFAULT_COLORS = [
-  "#e92434", // red
-  "#ff9e1d", // orange
-  "#e9e224", // yellow
-  "#36ceba", // cyan
-  "#000000", // black
+// Predefined theme colors with default scores
+const PREDEFINED_COLORS = [
+  { color: "#e92434", score: 5 },    // red
+  { color: "#ff9e1d", score: 15 },   // orange
+  { color: "#e9e224", score: 10 },    // yellow
+  { color: "#36ceba", score: 25 },   // cyan
+  { color: "#000000", score: 20 },   // black
 ];
 
-// Color scores mapping
-const COLOR_SCORES = {
-  "#e92434": 5,    // red
-  "#ff9e1d": 15,   // orange
-  "#e9e224": 10,   // yellow
-  "#000000": 20,   // black
-  "#36ceba": 25,   // cyan
-  "#ffffff": 30,   // white
-  "#fff": 30,      // white (alternative)
-  "white": 30,
-  "black": 20,
-  "red": 5,
-  "yellow": 10,
-  "orange": 15,
-  "cyan": 25,
+// Predefined dot sizes with default scores
+const PREDEFINED_DOT_SIZES = [
+  { size: "extra small", score: 10 },
+  { size: "small", score: 7 },
+  { size: "medium", score: 5 },
+  { size: "large", score: 3 },
+  { size: "extra large", score: 1 },
+];
+
+// Map size names to pixel values for UI display
+const SIZE_TO_PIXELS = {
+  "extra small": 20,
+  "small": 40,
+  "medium": 60,
+  "large": 80,
+  "extra large": 100,
 };
 
-// Get predefined dot size based on index (cycles through sizes)
-function getPredefinedDotSize(dotIndex) {
-  return PREDEFINED_DOT_SIZES[dotIndex % PREDEFINED_DOT_SIZES.length];
+// Get a random color from the colors array
+function getRandomColor(colors) {
+  if (!colors || colors.length === 0) {
+    return "#e92434"; // default red
+  }
+  const randomIndex = Math.floor(Math.random() * colors.length);
+  return colors[randomIndex].color;
 }
 
-// Strip "px" or other units from size for display in input fields
-function stripSizeUnit(size) {
-  if (!size) return "";
-  const sizeStr = String(size).trim();
-  // Remove common CSS units
-  return sizeStr.replace(/px|em|rem|%|vh|vw|cm|mm|in|pt|pc$/i, "").trim();
-}
-
-// Get predefined size score based on index (cycles through scores)
-function getPredefinedSizeScore(dotIndex) {
-  return PREDEFINED_SIZE_SCORES[dotIndex % PREDEFINED_SIZE_SCORES.length];
-}
-
-// Get color score based on color value
-function getColorScore(color) {
-  if (!color) return 0;
-  
-  const normalizedColor = color.trim().toLowerCase();
-  
-  // Check exact matches first
-  if (COLOR_SCORES[normalizedColor] !== undefined) {
-    return COLOR_SCORES[normalizedColor];
-  }
-  
-  // Check hex colors (normalize to lowercase)
-  const hexColor = normalizedColor.startsWith("#") 
-    ? normalizedColor 
-    : `#${normalizedColor}`;
-  
-  if (COLOR_SCORES[hexColor] !== undefined) {
-    return COLOR_SCORES[hexColor];
-  }
-  
-  // Try to match common color names in hex
-  const colorMap = {
-    "#e92434": 5,    // red
-    "#ff9e1d": 15,   // orange
-    "#e9e224": 10,   // yellow
-    "#000000": 20,   // black
-    "#36ceba": 25,   // cyan
-    "#ffffff": 30,   // white
-    "#fff": 30,
-  };
-  
-  // Normalize hex color (remove spaces, ensure # prefix)
-  const cleanHex = hexColor.replace(/\s+/g, "").toLowerCase();
-  if (colorMap[cleanHex] !== undefined) {
-    return colorMap[cleanHex];
-  }
-  
-  // For other colors, default to 0
-  return 0;
+// Get size name based on index (cycles through sizes)
+function getSizeNameForDot(dotIndex) {
+  return PREDEFINED_DOT_SIZES[dotIndex % PREDEFINED_DOT_SIZES.length].size;
 }
 
 function ColorSwatch({ color, onChange, fieldName }) {
@@ -168,12 +119,18 @@ function ColorSwatch({ color, onChange, fieldName }) {
         sx={{
           width: 28,
           height: 28,
+          minWidth: 28,
+          minHeight: 28,
+          maxWidth: 28,
+          maxHeight: 28,
+          aspectRatio: "1/1",
           borderRadius: "50%",
           border: "1px solid rgba(255,255,255,0.6)",
           boxShadow: "0 4px 10px rgba(0,0,0,0.12)",
           background: color?.trim() || "transparent",
           cursor: "pointer",
           transition: "transform 0.2s, box-shadow 0.2s",
+          flexShrink: 0,
           "&:hover": {
             transform: "scale(1.1)",
             boxShadow: "0 6px 15px rgba(233, 226, 36, 0.4)",
@@ -263,11 +220,20 @@ export default function LevelEditor({
   isUploadingLogo,
   onUploadBackgroundImage,
   isUploadingBackgroundImage = false,
+  hideColors = false,
+  colorsOnly = false,
+  backgroundOnly = false,
+  dotSizesOnly = false,
+  dotsOnly = false,
+  showBackgroundDetails = false,
+  onFormValuesChange,
 }) {
   const [formValues, setFormValues] = useState(() => ({
     backgroundColor: "",
     backgroundType: "color", // "color", "colorLogo", or "image"
     backgroundImageUrl: "",
+    colors: [...PREDEFINED_COLORS],
+    dotSizes: [...PREDEFINED_DOT_SIZES],
     dots: [],
     logoUrl: "",
   }));
@@ -284,25 +250,64 @@ export default function LevelEditor({
     ? getLogoUrl(formValues.backgroundImageUrl)
     : null;
 
+  // Use a ref to track previous level data to detect actual changes
+  const prevLevelRef = useRef(null);
+  // Track the last saved state to compare changes
+  const lastSavedStateRef = useRef(null);
+
   useEffect(() => {
     if (level) {
-      // Initialize dots with proper sizeScore and colorScore
-      const initializedDots = Array.isArray(level.dots) 
-        ? level.dots.map((dot, index) => {
-            const sizeScoreNum = typeof dot.sizeScore === 'number' ? dot.sizeScore : (Number(dot.sizeScore) || getPredefinedSizeScore(index));
-            const colorScoreNum = typeof dot.colorScore === 'number' ? dot.colorScore : (Number(dot.colorScore) || getColorScore(dot.color));
-            // Strip "px" from size for display in input fields
-            const sizeValue = dot.size || String(getPredefinedDotSize(index));
-            const displaySize = stripSizeUnit(sizeValue);
-            
-            return {
-              color: dot.color || "",
-              size: displaySize, // Store without "px" for editing, backend will add it
-              sizeScore: sizeScoreNum,
-              colorScore: colorScoreNum,
-              totalScore: (typeof dot.totalScore === 'number' ? dot.totalScore : (Number(dot.totalScore) || sizeScoreNum + colorScoreNum)),
-            };
-          })
+      // Create a stable key from level data to detect changes
+      const levelKey = JSON.stringify({
+        _id: level._id,
+        colors: level.colors,
+        dotSizes: level.dotSizes,
+        dots: level.dots,
+        background: level.background,
+        logoUrl: level.logoUrl,
+        updatedAt: level.updatedAt,
+      });
+
+      // Only update if level data actually changed
+      if (prevLevelRef.current === levelKey) {
+        return;
+      }
+      prevLevelRef.current = levelKey;
+
+      // Initialize colors array - filter out null/undefined elements
+      const initializedColors = Array.isArray(level.colors) && level.colors.length > 0
+        ? level.colors
+            .filter((c) => c != null && (c.color != null || c.color !== undefined))
+            .map((c) => ({
+              color: String(c?.color || ""),
+              score: typeof c?.score === 'number' ? c.score : (Number(c?.score) || 0),
+            }))
+        : [...PREDEFINED_COLORS];
+      
+      // Ensure colors array is never empty
+      const safeColors = initializedColors.length > 0 ? initializedColors : [...PREDEFINED_COLORS];
+      
+      // Initialize dotSizes array - filter out null/undefined elements
+      const initializedDotSizes = Array.isArray(level.dotSizes) && level.dotSizes.length > 0
+        ? level.dotSizes
+            .filter((s) => s != null && (s.size != null || s.size !== undefined))
+            .map((s) => ({
+              size: String(s?.size || ""),
+              score: typeof s?.score === 'number' ? s.score : (Number(s?.score) || 0),
+            }))
+        : [...PREDEFINED_DOT_SIZES];
+      
+      // Ensure dotSizes array is never empty
+      const safeDotSizes = initializedDotSizes.length > 0 ? initializedDotSizes : [...PREDEFINED_DOT_SIZES];
+      
+      // Initialize dots with color and colorScore - filter out null/undefined elements
+      const initializedDots = Array.isArray(level.dots) && level.dots.length > 0
+        ? level.dots
+            .filter((dot) => dot != null)
+            .map((dot) => ({
+              color: String(dot?.color || ""),
+              colorScore: typeof dot?.colorScore === 'number' ? dot.colorScore : (Number(dot?.colorScore) || 0),
+            }))
         : [];
       
       // Determine if background is a color or image URL
@@ -329,20 +334,46 @@ export default function LevelEditor({
         originalBackgroundColorRef.current = "";
       }
       
-      setFormValues({
+      const initialFormValues = {
         backgroundColor: backgroundColor,
         backgroundType: backgroundType,
         backgroundImageUrl: backgroundImageUrl,
+        colors: safeColors,
+        dotSizes: safeDotSizes,
         dots: initializedDots,
         logoUrl: level.logoUrl || "",
-      });
+      };
+      
+      setFormValues(initialFormValues);
+      // Store initial state as last saved state
+      lastSavedStateRef.current = {
+        background: level.background || "",
+        colors: JSON.stringify(safeColors),
+        dotSizes: JSON.stringify(safeDotSizes),
+        dots: JSON.stringify(initializedDots),
+        logoUrl: level.logoUrl || "",
+      };
       setBackgroundImageError(null);
+      
+      // Notify parent of form values change for real-time preview
+      if (onFormValuesChange) {
+        onFormValuesChange(initialFormValues);
+      }
     }
-  }, [level]);
+  }, [level, onFormValuesChange]);
+  
+  // Notify parent whenever formValues change (for real-time preview)
+  useEffect(() => {
+    if (onFormValuesChange && level) {
+      onFormValuesChange(formValues);
+    }
+  }, [formValues, onFormValuesChange, level]);
 
   const hasChanges = useMemo(() => {
     if (!level) return false;
     const dotsChanged = JSON.stringify(formValues.dots) !== JSON.stringify(level.dots || []);
+    const colorsChanged = JSON.stringify(formValues.colors) !== JSON.stringify(level.colors || []);
+    const dotSizesChanged = JSON.stringify(formValues.dotSizes) !== JSON.stringify(level.dotSizes || []);
     
     // Determine what the current background value should be
     const currentBackground = formValues.backgroundType === "image" 
@@ -352,12 +383,14 @@ export default function LevelEditor({
     return (
       currentBackground !== (level.background || "") ||
       formValues.logoUrl !== (level.logoUrl || "") ||
-      dotsChanged
+      dotsChanged ||
+      colorsChanged ||
+      dotSizesChanged
     );
   }, [formValues, level]);
 
   const autoSave = useCallback((values) => {
-    if (!level) return;
+    if (!level || !level._id) return;
     
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -369,27 +402,95 @@ export default function LevelEditor({
         ? values.backgroundImageUrl 
         : values.backgroundColor;
       
-      // Don't save if background value is empty/null - only save when user actually sets a value
-      if (!backgroundValue || backgroundValue.trim() === "") {
-        return;
-      }
+      // Use existing background if new one is empty
+      const finalBackgroundValue = (backgroundValue && backgroundValue.trim() !== "") 
+        ? backgroundValue 
+        : (level?.background || "");
       
       // Update original background color ref if it's a color (not an image)
-      if (values.backgroundType !== "image" && backgroundValue) {
-        originalBackgroundColorRef.current = backgroundValue;
+      if (values.backgroundType !== "image" && finalBackgroundValue) {
+        originalBackgroundColorRef.current = finalBackgroundValue;
       }
       
-      const payload = {
-        ...values,
-        background: backgroundValue,
-        // Only send logoUrl if backgroundType is not "image"
-        logoUrl: values.backgroundType === "image" ? "" : values.logoUrl,
+      // Process colors array - ensure all have color and score
+      const processedColors = (values.colors && Array.isArray(values.colors) && values.colors.length > 0)
+        ? values.colors
+            .filter((c) => c != null && c.color)
+            .map((c) => ({
+              color: String(c.color || ""),
+              score: typeof c.score === 'number' ? c.score : (Number(c.score) || 0),
+            }))
+        : [];
+      
+      // Process dotSizes array
+      let dotSizesToSave = [];
+      if (values.dotSizes && Array.isArray(values.dotSizes) && values.dotSizes.length > 0) {
+        const validDotSizes = values.dotSizes.filter((s) => s && s.size);
+        if (validDotSizes.length > 0) {
+          dotSizesToSave = validDotSizes.map((s) => ({
+            size: String(s.size || ""),
+            score: typeof s.score === 'number' ? s.score : (Number(s.score) || 0),
+          }));
+        }
+      }
+      
+      // Process dots array - ensure all have color as string, filter out null/undefined
+      const processedDots = (values.dots && Array.isArray(values.dots))
+        ? values.dots
+            .filter((dot) => dot != null && dot !== undefined)
+            .map((dot) => {
+              const dotColor = dot && typeof dot.color === 'string' ? String(dot.color).trim() : "";
+              if (!dotColor || dotColor === "") {
+                return null;
+              }
+              return {
+                color: dotColor,
+                colorScore: typeof dot.colorScore === 'number' ? dot.colorScore : (Number(dot.colorScore) || 0),
+              };
+            })
+            .filter((dot) => dot != null)
+        : [];
+
+      // Build current state for comparison
+      const currentState = {
+        background: finalBackgroundValue,
+        colors: JSON.stringify(processedColors),
+        dotSizes: JSON.stringify(dotSizesToSave),
+        dots: JSON.stringify(processedDots),
+        logoUrl: values.backgroundType === "image" ? "" : (values.logoUrl || ""),
       };
-      // Clean up temporary fields
-      delete payload.backgroundColor;
-      delete payload.backgroundType;
-      delete payload.backgroundImageUrl;
-      onSave(payload, false);
+
+      // Build payload with ONLY changed fields
+      const payload = {};
+      
+      if (!lastSavedStateRef.current || currentState.background !== lastSavedStateRef.current.background) {
+        payload.background = finalBackgroundValue;
+      }
+      
+      if (!lastSavedStateRef.current || currentState.colors !== lastSavedStateRef.current.colors) {
+        payload.colors = processedColors;
+      }
+      
+      if (!lastSavedStateRef.current || currentState.dotSizes !== lastSavedStateRef.current.dotSizes) {
+        payload.dotSizes = dotSizesToSave;
+      }
+      
+      if (!lastSavedStateRef.current || currentState.dots !== lastSavedStateRef.current.dots) {
+        payload.dots = processedDots;
+      }
+      
+      if (!lastSavedStateRef.current || currentState.logoUrl !== lastSavedStateRef.current.logoUrl) {
+        payload.logoUrl = values.backgroundType === "image" ? "" : (values.logoUrl || "");
+      }
+
+      // Only save if there are changes
+      if (Object.keys(payload).length > 0) {
+        console.log(`[autoSave] Saving changes for level ${level._id}:`, Object.keys(payload));
+        // Use the new ID-based endpoint
+        onSave(payload, false, level._id);
+        // Update last saved state
+        lastSavedStateRef.current = currentState;
+      }
     }, 500);
   }, [level, onSave]);
 
@@ -412,24 +513,43 @@ export default function LevelEditor({
 
   const handleAddDot = () => {
     setFormValues((prev) => {
-      const newDotIndex = prev.dots.length;
-      const predefinedSize = getPredefinedDotSize(newDotIndex);
-      const predefinedSizeScore = getPredefinedSizeScore(newDotIndex);
-      // Cycle through theme default colors
-      const defaultColor = THEME_DEFAULT_COLORS[newDotIndex % THEME_DEFAULT_COLORS.length];
-      const colorScore = getColorScore(defaultColor);
-      const totalScore = predefinedSizeScore + colorScore;
+      // Ensure we have valid colors array - filter out any null/undefined
+      const validColors = (prev.colors || [])
+        .filter((c) => c != null && c.color != null)
+        .map((c) => ({
+          color: String(c.color || ""),
+          score: typeof c.score === 'number' ? c.score : (Number(c.score) || 0),
+        }));
+      
+      // Use colors from the form (user-defined colors) or fallback to predefined
+      const availableColors = validColors.length > 0 ? validColors : PREDEFINED_COLORS;
+      
+      // Ensure availableColors is never empty
+      if (availableColors.length === 0) {
+        console.warn("[handleAddDot] No valid colors available, using default");
+        return prev;
+      }
+      
+      // Cycle through colors evenly (round-robin) - no consecutive same colors
+      const currentDotIndex = (prev.dots || []).length;
+      const colorIndex = currentDotIndex % availableColors.length;
+      const selectedColorItem = availableColors[colorIndex];
+      
+      // Ensure color is always a string
+      const selectedColor = String(selectedColorItem?.color || "#000000");
+      // Use the score from the colors array
+      const colorScore = typeof selectedColorItem?.score === 'number' 
+        ? selectedColorItem.score 
+        : (Number(selectedColorItem?.score) || 0);
       
       const newValues = {
         ...prev,
+        colors: availableColors, // Ensure colors are valid
         dots: [
-          ...prev.dots,
+          ...(prev.dots || []),
           {
-            color: defaultColor,
-            size: String(predefinedSize),
-            sizeScore: predefinedSizeScore,
+            color: selectedColor,
             colorScore: colorScore,
-            totalScore: totalScore,
           },
         ],
       };
@@ -440,42 +560,33 @@ export default function LevelEditor({
 
   const handleDotChange = (index, field, value) => {
     setFormValues((prev) => {
-      const updatedDots = prev.dots.map((dot, i) => {
+      // Ensure dots array exists and is valid
+      const validDots = (prev.dots || [])
+        .filter((dot) => dot != null)
+        .map((dot) => ({
+          color: String(dot?.color || ""),
+          colorScore: typeof dot?.colorScore === 'number' ? dot.colorScore : (Number(dot?.colorScore) || 0),
+        }));
+      
+      // Validate index
+      if (index < 0 || index >= validDots.length) {
+        console.warn(`[handleDotChange] Invalid index ${index} for dots array of length ${validDots.length}`);
+        return prev;
+      }
+      
+      const updatedDots = validDots.map((dot, i) => {
         if (i === index) {
-          const updated = { ...dot };
-          
-          // Handle different field types
-          if (field === "color") {
-            updated.color = value;
-            updated.colorScore = getColorScore(value);
-          } else if (field === "sizeScore") {
-            // Convert to number immediately
-            updated.sizeScore = value === "" ? 0 : Number(value) || 0;
-          } else if (field === "colorScore") {
-            // Convert to number immediately
-            updated.colorScore = value === "" ? 0 : Number(value) || 0;
-          } else if (field === "size") {
-            updated.size = value;
-            // If sizeScore is not set, update it
-            if (!dot.sizeScore || dot.sizeScore === 0 || dot.sizeScore === "0") {
-              updated.sizeScore = getPredefinedSizeScore(index);
-            }
-          } else {
-            updated[field] = value;
+          const updatedDot = {
+            ...dot,
+            [field]: field === "color" ? String(value || "") : value,
+          };
+          // Ensure colorScore is a number
+          if (updatedDot.colorScore !== undefined) {
+            updatedDot.colorScore = typeof updatedDot.colorScore === 'number' 
+              ? updatedDot.colorScore 
+              : (Number(updatedDot.colorScore) || 0);
           }
-          
-          // Convert sizeScore and colorScore to numbers for calculation
-          const sizeScoreNum = typeof updated.sizeScore === 'number' 
-            ? updated.sizeScore 
-            : (Number(updated.sizeScore) || 0);
-          const colorScoreNum = typeof updated.colorScore === 'number' 
-            ? updated.colorScore 
-            : (Number(updated.colorScore) || 0);
-          
-          // Update totalScore automatically
-          updated.totalScore = sizeScoreNum + colorScoreNum;
-          
-          return updated;
+          return updatedDot;
         }
         return dot;
       });
@@ -490,23 +601,179 @@ export default function LevelEditor({
   };
 
   const handleDotColorChange = (index, value) => {
-    // When color changes, automatically update colorScore and totalScore
-    const colorScore = getColorScore(value);
     setFormValues((prev) => {
+      // Ensure dots array exists and is valid
+      const validDots = (prev.dots || [])
+        .filter((dot) => dot != null)
+        .map((dot) => ({
+          color: String(dot?.color || ""),
+          colorScore: typeof dot?.colorScore === 'number' ? dot.colorScore : (Number(dot?.colorScore) || 0),
+        }));
+      
+      // Validate index
+      if (index < 0 || index >= validDots.length) {
+        console.warn(`[handleDotColorChange] Invalid index ${index} for dots array of length ${validDots.length}`);
+        return prev;
+      }
+      
+      const colorValue = String(value || "");
+      
+      // Ensure colors array is valid for lookup
+      const validColors = (prev.colors || [])
+        .filter((c) => c != null && c.color != null)
+        .map((c) => ({
+          color: String(c.color || ""),
+          score: typeof c.score === 'number' ? c.score : (Number(c.score) || 0),
+        }));
+      
+      // Find the color score from the colors array
+      const colorItem = validColors.find((c) => c.color === colorValue);
+      const colorScore = colorItem 
+        ? (typeof colorItem.score === 'number' ? colorItem.score : (Number(colorItem.score) || 0))
+        : (validDots[index]?.colorScore || 0);
+      
       const newValues = {
         ...prev,
-        dots: prev.dots.map((dot, i) => {
+        dots: validDots.map((dot, i) => {
           if (i === index) {
-            const sizeScoreNum = typeof dot.sizeScore === 'number' ? dot.sizeScore : (Number(dot.sizeScore) || 0);
             return {
               ...dot,
-              color: value,
+              color: colorValue,
               colorScore: colorScore,
-              totalScore: sizeScoreNum + colorScore,
             };
           }
           return dot;
         }),
+      };
+      autoSave(newValues);
+      return newValues;
+    });
+  };
+
+  const handleColorChange = (index, field, value) => {
+    setFormValues((prev) => {
+      // Ensure colors array exists and is valid
+      const validColors = (prev.colors || [])
+        .filter((c) => c != null)
+        .map((c) => ({
+          color: String(c?.color || ""),
+          score: typeof c?.score === 'number' ? c.score : (Number(c?.score) || 0),
+        }));
+      
+      // Validate index is within bounds
+      if (index < 0 || index >= validColors.length) {
+        console.warn(`[handleColorChange] Invalid index ${index} for colors array of length ${validColors.length}`);
+        return prev;
+      }
+      
+      const updatedColors = validColors.map((colorItem, i) => {
+        if (i === index) {
+          return {
+            ...colorItem,
+            [field]: field === "score" 
+              ? (value === "" ? 0 : Number(value) || 0) 
+              : String(value || ""),
+          };
+        }
+        return colorItem;
+      });
+      
+      const newValues = {
+        ...prev,
+        colors: updatedColors,
+      };
+      autoSave(newValues);
+      return newValues;
+    });
+  };
+
+  const handleDotSizeChange = (index, field, value) => {
+    setFormValues((prev) => {
+      // Ensure dotSizes array exists and is valid
+      const validDotSizes = (prev.dotSizes || [])
+        .filter((s) => s != null && s.size != null)
+        .map((s) => ({
+          size: String(s?.size || ""),
+          score: typeof s?.score === 'number' ? s.score : (Number(s?.score) || 0),
+        }));
+      
+      // If empty, use predefined sizes
+      const safeDotSizes = validDotSizes.length > 0 ? validDotSizes : [...PREDEFINED_DOT_SIZES];
+      
+      // Validate index is within bounds
+      if (index < 0 || index >= safeDotSizes.length) {
+        console.warn(`[handleDotSizeChange] Invalid index ${index} for dotSizes array of length ${safeDotSizes.length}`);
+        return prev;
+      }
+      
+      const updatedDotSizes = safeDotSizes.map((sizeItem, i) => {
+        if (i === index) {
+          return {
+            ...sizeItem,
+            [field]: field === "score" 
+              ? (value === "" ? 0 : Number(value) || 0) 
+              : String(value || ""),
+          };
+        }
+        return sizeItem;
+      });
+      
+      const newValues = {
+        ...prev,
+        dotSizes: updatedDotSizes,
+      };
+      autoSave(newValues);
+      return newValues;
+    });
+  };
+
+  const handleAddColor = () => {
+    setFormValues((prev) => {
+      // Ensure colors array is valid before adding
+      const validColors = (prev.colors || [])
+        .filter((c) => c != null && c.color != null)
+        .map((c) => ({
+          color: String(c.color || ""),
+          score: typeof c.score === 'number' ? c.score : (Number(c.score) || 0),
+        }));
+      
+      const newValues = {
+        ...prev,
+        colors: [
+          ...validColors,
+          { color: "#000000", score: 0 },
+        ],
+      };
+      autoSave(newValues);
+      return newValues;
+    });
+  };
+
+  const handleRemoveColor = (index) => {
+    setFormValues((prev) => {
+      // Ensure colors array exists and is valid
+      const validColors = (prev.colors || [])
+        .filter((c) => c != null && c.color != null)
+        .map((c) => ({
+          color: String(c.color || ""),
+          score: typeof c.score === 'number' ? c.score : (Number(c.score) || 0),
+        }));
+      
+      // Validate index
+      if (index < 0 || index >= validColors.length) {
+        console.warn(`[handleRemoveColor] Invalid index ${index} for colors array of length ${validColors.length}`);
+        return prev;
+      }
+      
+      // Don't allow removing the last color
+      if (validColors.length <= 1) {
+        console.warn("[handleRemoveColor] Cannot remove the last color");
+        return prev;
+      }
+      
+      const newValues = {
+        ...prev,
+        colors: validColors.filter((_, i) => i !== index),
       };
       autoSave(newValues);
       return newValues;
@@ -535,7 +802,7 @@ export default function LevelEditor({
       ? formValues.backgroundImageUrl 
       : formValues.backgroundColor;
     
-    // Don't save if background value is empty - use the existing level background instead
+    // Use existing background if new one is empty
     const finalBackgroundValue = (backgroundValue && backgroundValue.trim() !== "") 
       ? backgroundValue 
       : (level?.background || "");
@@ -545,9 +812,51 @@ export default function LevelEditor({
       originalBackgroundColorRef.current = finalBackgroundValue;
     }
     
+    // Process colors array - ensure all have color and score
+    const processedColors = (formValues.colors && Array.isArray(formValues.colors) && formValues.colors.length > 0)
+      ? formValues.colors.map((c) => ({
+          color: c.color || "",
+          score: typeof c.score === 'number' ? c.score : (Number(c.score) || 0),
+        }))
+      : [];
+    
+    // Always ensure dotSizes are sent with proper structure
+    let dotSizesToSave = [];
+    if (formValues.dotSizes && Array.isArray(formValues.dotSizes) && formValues.dotSizes.length > 0) {
+      // Validate that all items have size property
+      const validDotSizes = formValues.dotSizes.filter((s) => s && s.size);
+      if (validDotSizes.length > 0) {
+        dotSizesToSave = validDotSizes.map((s) => ({
+          size: String(s.size || ""),
+          score: typeof s.score === 'number' ? s.score : (Number(s.score) || 0),
+        }));
+      }
+    }
+    
+    // Process dots array - ensure all have color as string, filter out null/undefined
+    const processedDots = (formValues.dots && Array.isArray(formValues.dots))
+      ? formValues.dots
+          .filter((dot) => dot != null && dot !== undefined)
+          .map((dot) => {
+            const dotColor = dot && typeof dot.color === 'string' ? String(dot.color).trim() : "";
+            // Ensure color is not empty
+            if (!dotColor || dotColor === "") {
+              return null; // Filter out dots without valid color
+            }
+            return {
+              color: dotColor,
+              colorScore: typeof dot.colorScore === 'number' ? dot.colorScore : (Number(dot.colorScore) || 0),
+            };
+          })
+          .filter((dot) => dot != null) // Remove any nulls from the map
+      : [];
+
     const payload = {
       ...formValues,
       background: finalBackgroundValue,
+      colors: processedColors,
+      dotSizes: dotSizesToSave,
+      dots: processedDots,
       // Only send logoUrl if backgroundType is not "image"
       logoUrl: formValues.backgroundType === "image" ? "" : formValues.logoUrl,
     };
@@ -669,18 +978,216 @@ export default function LevelEditor({
     );
   }
 
-  return (
-    <Box component="form" onSubmit={handleSubmit}>
-      <Stack spacing={3}>
-        <Box>
-          <Typography variant="h5" fontWeight={700} sx={{ color: "#ffffff" }}>
-            Level {level.level} Configuration
-          </Typography>
-          <Typography variant="body2" sx={{ mt: 0.5, color: "rgba(255, 255, 255, 0.7)" }}>
-            Adjust the background, dot palette, and logo for this stage. Preview updates in real time on the right.
-          </Typography>
-        </Box>
+  // If colorsOnly is true, show only the Colors panel
+  if (colorsOnly) {
+    return (
+      <Stack spacing={2} sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+        <Typography variant="subtitle1" fontWeight={600} sx={{ color: "#ffffff", flexShrink: 0 }}>
+          Colors Configuration
+        </Typography>
+        <Paper
+          sx={{
+            p: 2,
+            backgroundColor: "rgba(26, 26, 26, 0.5)",
+            border: "1px solid rgba(233, 226, 36, 0.3)",
+            borderRadius: 2,
+            flex: 1,
+            minHeight: 0,
+            maxHeight: "400px",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <Stack spacing={2} sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ flexShrink: 0 }}>
+              <Typography variant="subtitle2" sx={{ color: "#ffffff", fontWeight: 600 }}>
+                Colors
+              </Typography>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={handleAddColor}
+                sx={{
+                  borderRadius: 2,
+                  borderColor: "rgba(233, 226, 36, 0.5)",
+                  backgroundColor: "rgba(233, 226, 36, 0.1)",
+                  color: "#e9e224",
+                  "&:hover": {
+                    borderColor: "#e9e224",
+                    backgroundColor: "rgba(233, 226, 36, 0.2)",
+                  },
+                }}
+              >
+                Add Color
+              </Button>
+            </Stack>
+            <Box
+              sx={{
+                flex: 1,
+                minHeight: 0,
+                overflowY: "auto",
+                overflowX: "hidden",
+                pr: 1,
+                "&::-webkit-scrollbar": {
+                  width: "8px",
+                },
+                "&::-webkit-scrollbar-track": {
+                  background: "rgba(26, 26, 26, 0.5)",
+                  borderRadius: "4px",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  background: "rgba(233, 226, 36, 0.4)",
+                  borderRadius: "4px",
+                  "&:hover": {
+                    background: "rgba(233, 226, 36, 0.6)",
+                  },
+                },
+              }}
+            >
+              <Stack spacing={1.5}>
+                {(formValues.colors || [])
+                  .filter((c) => c != null && c.color != null)
+                  .map((colorItem, originalIndex) => {
+                    // Find the actual index in the original array for correct updates
+                    const actualIndex = (formValues.colors || []).findIndex((c, i) => 
+                      c === colorItem || (c != null && c.color === colorItem.color)
+                    );
+                    const index = actualIndex >= 0 ? actualIndex : originalIndex;
+                    
+                    return (
+                      <Stack 
+                        key={index}
+                        direction="row" 
+                        spacing={1.5} 
+                        alignItems="center"
+                        sx={{
+                          p: 1.5,
+                          borderRadius: 1,
+                          backgroundColor: "rgba(255, 255, 255, 0.02)",
+                          "&:hover": {
+                            backgroundColor: "rgba(255, 255, 255, 0.05)",
+                          },
+                        }}
+                      >
+                        <Box sx={{ flexShrink: 0 }}>
+                          <ColorSwatch
+                            color={colorItem?.color || ""}
+                            onChange={(fieldName, value) => handleColorChange(index, "color", value)}
+                            fieldName={`color${index}`}
+                          />
+                        </Box>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Color"
+                          value={colorItem?.color || ""}
+                          onChange={(e) => handleColorChange(index, "color", e.target.value)}
+                          InputProps={{
+                            sx: {
+                              color: "#ffffff",
+                              "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
+                            },
+                          }}
+                          InputLabelProps={{
+                            sx: {
+                              color: "rgba(255, 255, 255, 0.7)",
+                              "&.Mui-focused": {
+                                color: "#e9e224",
+                              },
+                            },
+                          }}
+                          sx={{
+                            "& .MuiInputLabel-root": {
+                              transform: "translate(14px, 9px) scale(1)",
+                              "&.MuiInputLabel-shrink": {
+                                transform: "translate(14px, -9px) scale(0.75)",
+                              },
+                            },
+                            "& .MuiOutlinedInput-root": {
+                              "& fieldset": {
+                                borderColor: "rgba(233, 226, 36, 0.3)",
+                              },
+                              "&:hover fieldset": {
+                                borderColor: "rgba(233, 226, 36, 0.5)",
+                              },
+                              "&.Mui-focused fieldset": {
+                                borderColor: "#e9e224",
+                              },
+                              backgroundColor: "rgba(255,255,255,0.05)",
+                            },
+                          }}
+                        />
+                        <TextField
+                          size="small"
+                          type="number"
+                          label="Score"
+                          value={colorItem?.score ?? 0}
+                          onChange={(e) => handleColorChange(index, "score", e.target.value)}
+                          sx={{
+                            width: 100,
+                            flexShrink: 0,
+                            "& .MuiInputLabel-root": {
+                              transform: "translate(14px, 9px) scale(1)",
+                              "&.MuiInputLabel-shrink": {
+                                transform: "translate(14px, -9px) scale(0.75)",
+                              },
+                            },
+                            "& .MuiOutlinedInput-root": {
+                              "& fieldset": {
+                                borderColor: "rgba(233, 226, 36, 0.3)",
+                              },
+                              "&:hover fieldset": {
+                                borderColor: "rgba(233, 226, 36, 0.5)",
+                              },
+                              "&.Mui-focused fieldset": {
+                                borderColor: "#e9e224",
+                              },
+                              backgroundColor: "rgba(255,255,255,0.05)",
+                              color: "#ffffff",
+                            },
+                          }}
+                          InputLabelProps={{
+                            sx: {
+                              color: "rgba(255, 255, 255, 0.7)",
+                              "&.Mui-focused": {
+                                color: "#e9e224",
+                              },
+                            },
+                          }}
+                        />
+                        <Box sx={{ flexShrink: 0 }}>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleRemoveColor(index)}
+                            sx={{
+                              color: "#ff5252",
+                              "&:hover": {
+                                backgroundColor: "rgba(255, 82, 82, 0.1)",
+                              },
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      </Stack>
+                    );
+                  })}
+              </Stack>
+            </Box>
+          </Stack>
+        </Paper>
+      </Stack>
+    );
+  }
 
+  // If backgroundOnly is true, show only background configuration
+  if (backgroundOnly) {
+    return (
+      <Stack spacing={2}>
+        <Typography variant="subtitle1" fontWeight={600} sx={{ color: "#ffffff" }}>
+          Background Configuration
+        </Typography>
         <Stack spacing={2}>
           {/* Background Type Selection */}
           <FormControl component="fieldset">
@@ -759,7 +1266,7 @@ export default function LevelEditor({
           </FormControl>
 
           {/* Background Color Field - Show for "color" and "colorLogo" */}
-          {(formValues.backgroundType === "color" || formValues.backgroundType === "colorLogo") && (
+          {formValues.backgroundType === "color" && (
             <TextField
               fullWidth
               label="Background Color"
@@ -807,6 +1314,104 @@ export default function LevelEditor({
             />
           )}
 
+          {/* Background Color & Logo - Show for "colorLogo" */}
+          {formValues.backgroundType === "colorLogo" && (
+            <Stack direction="row" spacing={2} alignItems="flex-start">
+              <TextField
+                fullWidth
+                label="Background Color"
+                name="backgroundColor"
+                value={formValues.backgroundColor}
+                onChange={handleInputChange}
+                placeholder="e.g. #5ac8fa or rgba(90,200,250,0.5)"
+                helperText={helperText}
+                InputProps={{
+                  sx: {
+                    borderRadius: 2.5,
+                    backgroundColor: "rgba(255,255,255,0.1)",
+                    color: "#ffffff",
+                    "& input": {
+                      color: "#ffffff",
+                      "&::placeholder": {
+                        color: "rgba(255, 255, 255, 0.5)",
+                        opacity: 1,
+                      },
+                    },
+                  },
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <ColorSwatch
+                        color={formValues.backgroundColor}
+                        onChange={handleColorPickerChange}
+                        fieldName="backgroundColor"
+                      />
+                    </InputAdornment>
+                  ),
+                }}
+                InputLabelProps={{
+                  sx: {
+                    color: "rgba(255, 255, 255, 0.7)",
+                    "&.Mui-focused": {
+                      color: "#e9e224",
+                    },
+                  },
+                }}
+                FormHelperTextProps={{
+                  sx: {
+                    color: "rgba(255, 255, 255, 0.6)",
+                  },
+                }}
+              />
+              <Box sx={{ minWidth: 200, pt: 1 }}>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg"
+                  hidden
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                />
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  startIcon={
+                    isUploadingLogo ? (
+                      <CircularProgress size={18} />
+                    ) : (
+                      <CloudUploadIcon />
+                    )
+                  }
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingLogo}
+                  sx={{
+                    py: 1.4,
+                    borderRadius: 3,
+                    borderColor: "rgba(233, 226, 36, 0.5)",
+                    backgroundColor: "rgba(233, 226, 36, 0.1)",
+                    color: "#e9e224",
+                    "&:hover": {
+                      borderColor: "#e9e224",
+                      backgroundColor: "rgba(233, 226, 36, 0.2)",
+                    },
+                  }}
+                >
+                  Upload Logo
+                </Button>
+                {imageError && (
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "#ff5252",
+                      mt: 1,
+                      fontSize: "0.75rem",
+                    }}
+                  >
+                    {imageError}
+                  </Typography>
+                )}
+              </Box>
+            </Stack>
+          )}
+
           {/* Background Image Upload - Show for "image" */}
           {formValues.backgroundType === "image" && (
             <Stack spacing={1.5}>
@@ -840,7 +1445,7 @@ export default function LevelEditor({
                   }}
                 >
                   {!previewBackgroundImageUrl && (
-                    <Typography sx={{ color: "rgba(255, 255, 255, 0.6)" }}>
+                    <Typography sx={{ color: "rgba(255, 255, 255, 0.6)" , ml:3}}>
                       No background image uploaded yet
                     </Typography>
                   )}
@@ -890,41 +1495,79 @@ export default function LevelEditor({
             </Stack>
           )}
         </Stack>
+        {backgroundOnly && <Stack />}
+      </Stack>
+    );
+  }
 
-        <Divider sx={{ borderColor: "rgba(233, 226, 36, 0.2)" }} />
+  // If showBackgroundDetails is true, show background image details box
+  // REMOVED - Background Image Details section
+  // if (showBackgroundDetails) {
+  //   if (formValues.backgroundType !== "image" || !previewBackgroundImageUrl) {
+  //     return null;
+  //   }
+  //   return (
+  //     <Paper
+  //       sx={{
+  //         p: 2,
+  //         backgroundColor: "rgba(26, 26, 26, 0.5)",
+  //         border: "1px solid rgba(233, 226, 36, 0.3)",
+  //         borderRadius: 2,
+  //       }}
+  //     >
+  //       <Stack spacing={2}>
+  //         <Typography variant="subtitle2" sx={{ color: "#ffffff", fontWeight: 600 }}>
+  //           Background Image Details
+  //         </Typography>
+  //         <Box
+  //           sx={{
+  //             width: "100%",
+  //             minHeight: 200,
+  //             borderRadius: 2,
+  //             border: "1px solid rgba(233, 226, 36, 0.3)",
+  //             overflow: "hidden",
+  //             backgroundImage: `url(${previewBackgroundImageUrl})`,
+  //             backgroundSize: "cover",
+  //             backgroundPosition: "center",
+  //             backgroundRepeat: "no-repeat",
+  //           }}
+  //         />
+  //         <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
+  //           Image URL: {formValues.backgroundImageUrl}
+  //         </Typography>
+  //       </Stack>
+  //     </Paper>
+  //   );
+  // }
 
-        <Stack spacing={2}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Typography variant="subtitle1" fontWeight={600} sx={{ color: "#ffffff" }}>
-              Edit  Configuration
+  // If dotSizesOnly is true, show only dot sizes
+  if (dotSizesOnly) {
+    return (
+      <Stack spacing={2} sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+        <Typography variant="subtitle1" fontWeight={600} sx={{ color: "#ffffff", flexShrink: 0 }}>
+          Dot Sizes Configuration
+        </Typography>
+        <Paper
+          sx={{
+            p: 2,
+            backgroundColor: "rgba(26, 26, 26, 0.5)",
+            border: "1px solid rgba(233, 226, 36, 0.3)",
+            borderRadius: 2,
+            flex: 1,
+            minHeight: 0,
+            maxHeight: "400px",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <Stack spacing={2} sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+            <Typography variant="subtitle2" sx={{ color: "#ffffff", fontWeight: 600, flexShrink: 0 }}>
+              Dot Sizes
             </Typography>
-            <Button
-              variant="outlined"
-              startIcon={<AddIcon />}
-              onClick={handleAddDot}
-              sx={{
-                borderRadius: 2,
-                borderColor: "rgba(233, 226, 36, 0.5)",
-                backgroundColor: "rgba(233, 226, 36, 0.1)",
-                color: "#e9e224",
-                "&:hover": {
-                  borderColor: "#e9e224",
-                  backgroundColor: "rgba(233, 226, 36, 0.2)",
-                },
-              }}
-            >
-              Add Dot
-            </Button>
-          </Stack>
-
-          {formValues.dots.length === 0 ? (
-            <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.6)", textAlign: "center", py: 2 }}>
-              No dots added yet. Click "Add Dot" to add your first dot.
-            </Typography>
-          ) : (
             <Box
               sx={{
-                maxHeight: "500px",
+                flex: 1,
+                minHeight: 0,
                 overflowY: "auto",
                 overflowX: "hidden",
                 pr: 1,
@@ -944,53 +1587,218 @@ export default function LevelEditor({
                 },
               }}
             >
-              <Stack spacing={2}>
-                {formValues.dots.map((dot, index) => (
-                  <Paper
-                    key={index}
-                    sx={{
-                      p: 2,
-                      backgroundColor: "rgba(26, 26, 26, 0.5)",
-                      border: "1px solid rgba(233, 226, 36, 0.3)",
-                      borderRadius: 2,
-                    }}
-                  >
-                    <Stack spacing={2}>
-                      <Stack direction="row" justifyContent="space-between" alignItems="center">
-                        <Stack direction="row" spacing={1.5} alignItems="center">
-                          <Box
-                            sx={{
-                              width: 24,
-                              height: 24,
-                              borderRadius: "50%",
-                              backgroundColor: dot.color?.trim() || "transparent",
-                              border: "1px solid rgba(255,255,255,0.3)",
-                            }}
-                          />
-                          <Typography variant="subtitle2" sx={{ color: "#ffffff", fontWeight: 600 }}>
-                            Dot {index + 1}
-                          </Typography>
-                        </Stack>
-                        <IconButton
+              <Stack spacing={1.5}>
+                {(formValues.dotSizes || [])
+                  .filter((s) => s != null && s.size != null)
+                  .map((sizeItem, originalIndex) => {
+                    const actualIndex = (formValues.dotSizes || []).findIndex((s, i) => 
+                      s === sizeItem || (s != null && s.size === sizeItem.size)
+                    );
+                    const index = actualIndex >= 0 ? actualIndex : originalIndex;
+                    
+                    return (
+                      <Stack 
+                        key={index}
+                        direction="row" 
+                        spacing={1.5} 
+                        alignItems="center"
+                        sx={{
+                          p: 1,
+                          borderRadius: 1,
+                          backgroundColor: "rgba(255, 255, 255, 0.02)",
+                          "&:hover": {
+                            backgroundColor: "rgba(255, 255, 255, 0.05)",
+                          },
+                        }}
+                      >
+                        <TextField
+                          fullWidth
                           size="small"
-                          onClick={() => handleRemoveDot(index)}
+                          label="Size"
+                          value={sizeItem?.size || ""}
+                          disabled
+                      InputProps={{
+                        sx: {
+                          color: "#ffffff",
+                        },
+                      }}
+                      InputLabelProps={{
+                        sx: {
+                          color: "rgba(255, 255, 255, 0.7)",
+                        },
+                      }}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          "& fieldset": {
+                            borderColor: "rgba(233, 226, 36, 0.3)",
+                          },
+                          backgroundColor: "rgba(255,255,255,0.05)",
+                          "&.Mui-disabled": {
+                            backgroundColor: "rgba(255,255,255,0.02)",
+                          },
+                        },
+                      }}
+                    />
+                        <TextField
+                          size="small"
+                          type="number"
+                          label="Score"
+                          value={sizeItem?.score ?? 0}
+                          onChange={(e) => handleDotSizeChange(index, "score", e.target.value)}
                           sx={{
-                            color: "#ff5252",
-                            "&:hover": {
-                              backgroundColor: "rgba(255, 82, 82, 0.1)",
+                            width: 100,
+                            "& .MuiOutlinedInput-root": {
+                              "& fieldset": {
+                                borderColor: "rgba(233, 226, 36, 0.3)",
+                              },
+                              "&:hover fieldset": {
+                                borderColor: "rgba(233, 226, 36, 0.5)",
+                              },
+                              "&.Mui-focused fieldset": {
+                                borderColor: "#e9e224",
+                              },
+                              backgroundColor: "rgba(255,255,255,0.05)",
+                              color: "#ffffff",
                             },
                           }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
+                          InputLabelProps={{
+                            sx: {
+                              color: "rgba(255, 255, 255, 0.7)",
+                              "&.Mui-focused": {
+                                color: "#e9e224",
+                              },
+                            },
+                          }}
+                        />
                       </Stack>
+                    );
+                  })}
+              </Stack>
+            </Box>
+          </Stack>
+        </Paper>
+      </Stack>
+    );
+  }
 
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label="Color"
-                        value={dot.color}
-                        onChange={(e) => handleDotChange(index, "color", e.target.value)}
+  // If dotsOnly is true, show only dots
+  if (dotsOnly) {
+    return (
+      <Stack spacing={2} sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ flexShrink: 0 }}>
+          <Typography variant="subtitle1" fontWeight={600} sx={{ color: "#ffffff" }}>
+            Dots Configuration
+          </Typography>
+          <Button
+            variant="outlined"
+            startIcon={<AddIcon />}
+            onClick={handleAddDot}
+            sx={{
+              borderRadius: 2,
+              borderColor: "rgba(233, 226, 36, 0.5)",
+              backgroundColor: "rgba(233, 226, 36, 0.1)",
+              color: "#e9e224",
+              "&:hover": {
+                borderColor: "#e9e224",
+                backgroundColor: "rgba(233, 226, 36, 0.2)",
+              },
+            }}
+          >
+            Add Dot
+          </Button>
+        </Stack>
+
+        {formValues.dots.length === 0 ? (
+          <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.6)", textAlign: "center", py: 2 }}>
+            No dots added yet. Click "Add Dot" to add your first dot.
+          </Typography>
+        ) : (
+          <Box
+            sx={{
+              minHeight: "500px",
+              maxHeight: "500px",
+              overflowY: "auto",
+              overflowX: "hidden",
+              pr: 1,
+              "&::-webkit-scrollbar": {
+                width: "8px",
+              },
+              "&::-webkit-scrollbar-track": {
+                background: "rgba(26, 26, 26, 0.5)",
+                borderRadius: "4px",
+              },
+              "&::-webkit-scrollbar-thumb": {
+                background: "rgba(233, 226, 36, 0.4)",
+                borderRadius: "4px",
+                "&:hover": {
+                  background: "rgba(233, 226, 36, 0.6)",
+                },
+              },
+            }}
+          >
+            <Stack spacing={1.5}>
+              {(formValues.dots || [])
+                .filter((dot) => dot != null)
+                .map((dot, originalIndex) => {
+                  // Find the actual index in the original array for correct updates
+                  const actualIndex = (formValues.dots || []).findIndex((d, i) => d === dot);
+                  const index = actualIndex >= 0 ? actualIndex : originalIndex;
+                  const displaySize = 20;
+                  
+                  return (
+                    <Paper
+                      key={index}
+                      sx={{
+                        p: 1.5,
+                        backgroundColor: "rgba(26, 26, 26, 0.5)",
+                        border: "1px solid rgba(233, 226, 36, 0.3)",
+                        borderRadius: 2,
+                      }}
+                    >
+                      <Stack spacing={1.5}>
+                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+                          <Stack direction="row" spacing={1.5} alignItems="center">
+                            <Box
+                              sx={{
+                                width: displaySize,
+                                height: displaySize,
+                                minWidth: displaySize,
+                                minHeight: displaySize,
+                                maxWidth: displaySize,
+                                maxHeight: displaySize,
+                                aspectRatio: "1/1",
+                                borderRadius: "50%",
+                                backgroundColor: dot?.color?.trim() || "transparent",
+                                border: "1px solid rgba(255,255,255,0.3)",
+                                flexShrink: 0,
+                              }}
+                            />
+                            <Stack>
+                              <Typography variant="subtitle2" sx={{ color: "#ffffff", fontWeight: 600 }}>
+                                Dot {index + 1}
+                              </Typography>
+                            </Stack>
+                          </Stack>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleRemoveDot(index)}
+                            sx={{
+                              color: "#ff5252",
+                              "&:hover": {
+                                backgroundColor: "rgba(255, 82, 82, 0.1)",
+                              },
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Stack>
+
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Color"
+                          value={dot?.color || ""}
+                          onChange={(e) => handleDotChange(index, "color", e.target.value)}
                         placeholder="e.g. #5ac8fa"
                         InputProps={{
                           sx: {
@@ -1030,230 +1838,500 @@ export default function LevelEditor({
                           },
                         }}
                       />
-
-                      <Stack direction="row" spacing={2}>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          type="text"
-                          label="Size"
-                          value={dot.size || String(getPredefinedDotSize(index))}
-                          onChange={(e) => handleDotChange(index, "size", e.target.value)}
-                          placeholder="e.g. 36"
-                          InputProps={{
-                            sx: {
-                              color: "#ffffff",
-                              "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
-                            },
-                          }}
-                          InputLabelProps={{
-                            sx: {
-                              color: "rgba(255, 255, 255, 0.7)",
-                              "&.Mui-focused": {
-                                color: "#e9e224",
-                              },
-                            },
-                          }}
-                          sx={{
-                            "& .MuiOutlinedInput-root": {
-                              "& fieldset": {
-                                borderColor: "rgba(233, 226, 36, 0.3)",
-                              },
-                              "&:hover fieldset": {
-                                borderColor: "rgba(233, 226, 36, 0.5)",
-                              },
-                              "&.Mui-focused fieldset": {
-                                borderColor: "#e9e224",
-                              },
-                              backgroundColor: "rgba(255,255,255,0.05)",
-                            },
-                          }}
-                        />
-
-                        <TextField
-                          fullWidth
-                          size="small"
-                          type="number"
-                          label="Size Score"
-                          value={dot.sizeScore !== undefined && dot.sizeScore !== null ? (typeof dot.sizeScore === 'number' ? dot.sizeScore : Number(dot.sizeScore) || 0) : 0}
-                          onChange={(e) => {
-                            const newValue = e.target.value;
-                            handleDotChange(index, "sizeScore", newValue);
-                          }}
-                          placeholder="e.g. 0"
-                          InputProps={{
-                            sx: {
-                              color: "#ffffff",
-                              "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
-                            },
-                          }}
-                          InputLabelProps={{
-                            sx: {
-                              color: "rgba(255, 255, 255, 0.7)",
-                              "&.Mui-focused": {
-                                color: "#e9e224",
-                              },
-                            },
-                          }}
-                          sx={{
-                            "& .MuiOutlinedInput-root": {
-                              "& fieldset": {
-                                borderColor: "rgba(233, 226, 36, 0.3)",
-                              },
-                              "&:hover fieldset": {
-                                borderColor: "rgba(233, 226, 36, 0.5)",
-                              },
-                              "&.Mui-focused fieldset": {
-                                borderColor: "#e9e224",
-                              },
-                              backgroundColor: "rgba(255,255,255,0.05)",
-                            },
-                          }}
-                        />
-
-                        <TextField
-                          fullWidth
-                          size="small"
-                          type="number"
-                          label="Color Score"
-                          value={dot.colorScore !== undefined && dot.colorScore !== null ? (typeof dot.colorScore === 'number' ? dot.colorScore : Number(dot.colorScore) || 0) : 0}
-                          onChange={(e) => {
-                            const newValue = e.target.value;
-                            handleDotChange(index, "colorScore", newValue);
-                          }}
-                          placeholder="e.g. 0"
-                          InputProps={{
-                            sx: {
-                              color: "#ffffff",
-                              "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
-                            },
-                          }}
-                          InputLabelProps={{
-                            sx: {
-                              color: "rgba(255, 255, 255, 0.7)",
-                              "&.Mui-focused": {
-                                color: "#e9e224",
-                              },
-                            },
-                          }}
-                          sx={{
-                            "& .MuiOutlinedInput-root": {
-                              "& fieldset": {
-                                borderColor: "rgba(233, 226, 36, 0.3)",
-                              },
-                              "&:hover fieldset": {
-                                borderColor: "rgba(233, 226, 36, 0.5)",
-                              },
-                              "&.Mui-focused fieldset": {
-                                borderColor: "#e9e224",
-                              },
-                              backgroundColor: "rgba(255,255,255,0.05)",
-                            },
-                          }}
-                        />
-
-                        <TextField
-                          fullWidth
-                          size="small"
-                          type="number"
-                          label="Score (Total)"
-                          value={(() => {
-                            const sizeScore = typeof dot.sizeScore === 'number' ? dot.sizeScore : (parseFloat(dot.sizeScore || "0") || 0);
-                            const colorScore = typeof dot.colorScore === 'number' ? dot.colorScore : (parseFloat(dot.colorScore || "0") || 0);
-                            return sizeScore + colorScore;
-                          })()}
-                          disabled
-                          InputProps={{
-                            sx: {
-                              color: "#ffffff",
-                              "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
-                            },
-                          }}
-                          InputLabelProps={{
-                            sx: {
-                              color: "rgba(255, 255, 255, 0.7)",
-                            },
-                          }}
-                          sx={{
-                            "& .MuiOutlinedInput-root": {
-                              "& fieldset": {
-                                borderColor: "rgba(233, 226, 36, 0.3)",
-                              },
-                              backgroundColor: "rgba(255,255,255,0.05)",
-                              "&.Mui-disabled": {
-                                backgroundColor: "rgba(255,255,255,0.02)",
-                              },
-                            },
-                          }}
-                        />
-                      </Stack>
                     </Stack>
                   </Paper>
-                ))}
+                );
+              })}
+            </Stack>
+          </Box>
+        )}
+      </Stack>
+    );
+  }
+
+  return (
+    <Box component="form" onSubmit={handleSubmit}>
+      <Stack spacing={3}>
+        <Box>
+          <Typography variant="h5" fontWeight={700} sx={{ color: "#ffffff" }}>
+            Level {level.level} Configuration
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 0.5, color: "rgba(255, 255, 255, 0.7)" }}>
+            Adjust the background, dot palette, and logo for this stage. Preview updates in real time on the right.
+          </Typography>
+        </Box>
+
+        <Stack spacing={2}>
+
+          {/* Colors Configuration Panel */}
+          {!hideColors && (
+          <Paper
+            sx={{
+              p: 2,
+              backgroundColor: "rgba(26, 26, 26, 0.5)",
+              border: "1px solid rgba(233, 226, 36, 0.3)",
+              borderRadius: 2,
+            }}
+          >
+            <Stack spacing={2}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Typography variant="subtitle2" sx={{ color: "#ffffff", fontWeight: 600 }}>
+                  Colors
+                </Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<AddIcon />}
+                  onClick={handleAddColor}
+                  sx={{
+                    borderRadius: 2,
+                    borderColor: "rgba(233, 226, 36, 0.5)",
+                    backgroundColor: "rgba(233, 226, 36, 0.1)",
+                    color: "#e9e224",
+                    "&:hover": {
+                      borderColor: "#e9e224",
+                      backgroundColor: "rgba(233, 226, 36, 0.2)",
+                    },
+                  }}
+                >
+                  Add Color
+                </Button>
               </Stack>
-            </Box>
+              <Box
+                sx={{
+                  maxHeight: "180px",
+                  overflowY: "auto",
+                  overflowX: "hidden",
+                  pr: 1,
+                  "&::-webkit-scrollbar": {
+                    width: "8px",
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    background: "rgba(26, 26, 26, 0.5)",
+                    borderRadius: "4px",
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    background: "rgba(233, 226, 36, 0.4)",
+                    borderRadius: "4px",
+                    "&:hover": {
+                      background: "rgba(233, 226, 36, 0.6)",
+                    },
+                  },
+                }}
+              >
+                <Stack spacing={1.5}>
+                  {(formValues.colors || [])
+                    .filter((c) => c != null && c.color != null)
+                    .map((colorItem, originalIndex) => {
+                      const actualIndex = (formValues.colors || []).findIndex((c, i) => 
+                        c === colorItem || (c != null && c.color === colorItem.color)
+                      );
+                      const index = actualIndex >= 0 ? actualIndex : originalIndex;
+                      
+                      return (
+                        <Stack 
+                          key={index}
+                          direction="row" 
+                          spacing={1.5} 
+                          alignItems="center"
+                          sx={{
+                            p: 1,
+                            borderRadius: 1,
+                            backgroundColor: "rgba(255, 255, 255, 0.02)",
+                            "&:hover": {
+                              backgroundColor: "rgba(255, 255, 255, 0.05)",
+                            },
+                          }}
+                        >
+                          <ColorSwatch
+                            color={colorItem?.color || ""}
+                            onChange={(fieldName, value) => handleColorChange(index, "color", value)}
+                            fieldName={`color${index}`}
+                          />
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Color"
+                            value={colorItem?.color || ""}
+                            onChange={(e) => handleColorChange(index, "color", e.target.value)}
+                        InputProps={{
+                          sx: {
+                            color: "#ffffff",
+                            "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
+                          },
+                        }}
+                        InputLabelProps={{
+                          sx: {
+                            color: "rgba(255, 255, 255, 0.7)",
+                            "&.Mui-focused": {
+                              color: "#e9e224",
+                            },
+                          },
+                        }}
+                        sx={{
+                          "& .MuiOutlinedInput-root": {
+                            "& fieldset": {
+                              borderColor: "rgba(233, 226, 36, 0.3)",
+                            },
+                            "&:hover fieldset": {
+                              borderColor: "rgba(233, 226, 36, 0.5)",
+                            },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "#e9e224",
+                            },
+                            backgroundColor: "rgba(255,255,255,0.05)",
+                          },
+                        }}
+                      />
+                          <TextField
+                            size="small"
+                            type="number"
+                            label="Score"
+                            value={colorItem?.score ?? 0}
+                            onChange={(e) => handleColorChange(index, "score", e.target.value)}
+                            sx={{
+                              width: 100,
+                              "& .MuiOutlinedInput-root": {
+                                "& fieldset": {
+                                  borderColor: "rgba(233, 226, 36, 0.3)",
+                                },
+                                "&:hover fieldset": {
+                                  borderColor: "rgba(233, 226, 36, 0.5)",
+                                },
+                                "&.Mui-focused fieldset": {
+                                  borderColor: "#e9e224",
+                                },
+                                backgroundColor: "rgba(255,255,255,0.05)",
+                                color: "#ffffff",
+                              },
+                            }}
+                            InputLabelProps={{
+                              sx: {
+                                color: "rgba(255, 255, 255, 0.7)",
+                                "&.Mui-focused": {
+                                  color: "#e9e224",
+                                },
+                              },
+                            }}
+                          />
+                          <IconButton
+                            size="small"
+                            onClick={() => handleRemoveColor(index)}
+                            sx={{
+                              color: "#ff5252",
+                              "&:hover": {
+                                backgroundColor: "rgba(255, 82, 82, 0.1)",
+                              },
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Stack>
+                      );
+                    })}
+                </Stack>
+              </Box>
+            </Stack>
+          </Paper>
           )}
+
+          {/* Dot Sizes and Dots - Side by side on large screens */}
+          <Grid container spacing={2}>
+            <Grid item xs={12} lg={6}>
+              {/* Dot Sizes Configuration Panel */}
+              <Paper
+                sx={{
+                  p: 2,
+                  backgroundColor: "rgba(26, 26, 26, 0.5)",
+                  border: "1px solid rgba(233, 226, 36, 0.3)",
+                  borderRadius: 2,
+                }}
+              >
+                <Stack spacing={2}>
+                  <Typography variant="subtitle2" sx={{ color: "#ffffff", fontWeight: 600 }}>
+                    Dot Sizes
+                  </Typography>
+                  <Box
+                    sx={{
+                      maxHeight: "180px",
+                      overflowY: "auto",
+                      overflowX: "hidden",
+                      pr: 1,
+                      "&::-webkit-scrollbar": {
+                        width: "8px",
+                      },
+                      "&::-webkit-scrollbar-track": {
+                        background: "rgba(26, 26, 26, 0.5)",
+                        borderRadius: "4px",
+                      },
+                      "&::-webkit-scrollbar-thumb": {
+                        background: "rgba(233, 226, 36, 0.4)",
+                        borderRadius: "4px",
+                        "&:hover": {
+                          background: "rgba(233, 226, 36, 0.6)",
+                        },
+                      },
+                    }}
+                  >
+                    <Stack spacing={1.5}>
+                      {(formValues.dotSizes || [])
+                        .filter((s) => s != null && s.size != null)
+                        .map((sizeItem, originalIndex) => {
+                          const actualIndex = (formValues.dotSizes || []).findIndex((s, i) => 
+                            s === sizeItem || (s != null && s.size === sizeItem.size)
+                          );
+                          const index = actualIndex >= 0 ? actualIndex : originalIndex;
+                          
+                          return (
+                            <Stack 
+                              key={index}
+                              direction="row" 
+                              spacing={1.5} 
+                              alignItems="center"
+                              sx={{
+                                p: 1,
+                                borderRadius: 1,
+                                backgroundColor: "rgba(255, 255, 255, 0.02)",
+                                "&:hover": {
+                                  backgroundColor: "rgba(255, 255, 255, 0.05)",
+                                },
+                              }}
+                            >
+                              <TextField
+                                fullWidth
+                                size="small"
+                                label="Size"
+                                value={sizeItem?.size || ""}
+                                disabled
+                                InputProps={{
+                                  sx: {
+                                    color: "#ffffff",
+                                  },
+                                }}
+                                InputLabelProps={{
+                                  sx: {
+                                    color: "rgba(255, 255, 255, 0.7)",
+                                  },
+                                }}
+                                sx={{
+                                  "& .MuiOutlinedInput-root": {
+                                    "& fieldset": {
+                                      borderColor: "rgba(233, 226, 36, 0.3)",
+                                    },
+                                    backgroundColor: "rgba(255,255,255,0.05)",
+                                    "&.Mui-disabled": {
+                                      backgroundColor: "rgba(255,255,255,0.02)",
+                                    },
+                                  },
+                                }}
+                              />
+                              <TextField
+                                size="small"
+                                type="number"
+                                label="Score"
+                                value={sizeItem?.score ?? 0}
+                                onChange={(e) => handleDotSizeChange(index, "score", e.target.value)}
+                                sx={{
+                                  width: 100,
+                                  "& .MuiOutlinedInput-root": {
+                                    "& fieldset": {
+                                      borderColor: "rgba(233, 226, 36, 0.3)",
+                                    },
+                                    "&:hover fieldset": {
+                                      borderColor: "rgba(233, 226, 36, 0.5)",
+                                    },
+                                    "&.Mui-focused fieldset": {
+                                      borderColor: "#e9e224",
+                                    },
+                                    backgroundColor: "rgba(255,255,255,0.05)",
+                                    color: "#ffffff",
+                                  },
+                                }}
+                                InputLabelProps={{
+                                  sx: {
+                                    color: "rgba(255, 255, 255, 0.7)",
+                                    "&.Mui-focused": {
+                                      color: "#e9e224",
+                                    },
+                                  },
+                                }}
+                              />
+                            </Stack>
+                          );
+                        })}
+                    </Stack>
+                  </Box>
+                </Stack>
+              </Paper>
+            </Grid>
+
+            <Grid item xs={12} lg={6}>
+              <Stack spacing={2}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                  <Typography variant="subtitle1" fontWeight={600} sx={{ color: "#ffffff" }}>
+                    Dots
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    startIcon={<AddIcon />}
+                    onClick={handleAddDot}
+                    sx={{
+                      borderRadius: 2,
+                      borderColor: "rgba(233, 226, 36, 0.5)",
+                      backgroundColor: "rgba(233, 226, 36, 0.1)",
+                      color: "#e9e224",
+                      "&:hover": {
+                        borderColor: "#e9e224",
+                        backgroundColor: "rgba(233, 226, 36, 0.2)",
+                      },
+                    }}
+                  >
+                    Add Dot
+                  </Button>
+                </Stack>
+
+                {(!formValues.dots || formValues.dots.length === 0) ? (
+                  <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.6)", textAlign: "center", py: 2 }}>
+                    No dots added yet. Click "Add Dot" to add your first dot.
+                  </Typography>
+                ) : (
+                  <Box
+                    sx={{
+                      maxHeight: "280px",
+                      overflowY: "auto",
+                      overflowX: "hidden",
+                      pr: 1,
+                      "&::-webkit-scrollbar": {
+                        width: "8px",
+                      },
+                      "&::-webkit-scrollbar-track": {
+                        background: "rgba(26, 26, 26, 0.5)",
+                        borderRadius: "4px",
+                      },
+                      "&::-webkit-scrollbar-thumb": {
+                        background: "rgba(233, 226, 36, 0.4)",
+                        borderRadius: "4px",
+                        "&:hover": {
+                          background: "rgba(233, 226, 36, 0.6)",
+                        },
+                      },
+                    }}
+                  >
+                    <Stack spacing={1.5}>
+                      {(formValues.dots || [])
+                        .filter((dot) => dot != null)
+                        .map((dot, originalIndex) => {
+                          const actualIndex = (formValues.dots || []).findIndex((d, i) => d === dot);
+                          const index = actualIndex >= 0 ? actualIndex : originalIndex;
+                          // Use small size for UI display (20px) - dot sizes shown in preview only
+                          const displaySize = 20;
+                          
+                          return (
+                            <Paper
+                              key={index}
+                              sx={{
+                                p: 1.5,
+                                backgroundColor: "rgba(26, 26, 26, 0.5)",
+                                border: "1px solid rgba(233, 226, 36, 0.3)",
+                                borderRadius: 2,
+                              }}
+                            >
+                              <Stack spacing={1.5}>
+                                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                  <Stack direction="row" spacing={1.5} alignItems="center">
+                                    <Box
+                                      sx={{
+                                        width: displaySize,
+                                        height: displaySize,
+                                        minWidth: displaySize,
+                                        minHeight: displaySize,
+                                        maxWidth: displaySize,
+                                        maxHeight: displaySize,
+                                        aspectRatio: "1/1",
+                                        borderRadius: "50%",
+                                        backgroundColor: dot?.color?.trim() || "transparent",
+                                        border: "1px solid rgba(255,255,255,0.3)",
+                                        flexShrink: 0,
+                                      }}
+                                    />
+                                    <Stack>
+                                      <Typography variant="subtitle2" sx={{ color: "#ffffff", fontWeight: 600 }}>
+                                        Dot {index + 1}
+                                      </Typography>
+                                    </Stack>
+                                  </Stack>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleRemoveDot(index)}
+                                    sx={{
+                                      color: "#ff5252",
+                                      "&:hover": {
+                                        backgroundColor: "rgba(255, 82, 82, 0.1)",
+                                      },
+                                    }}
+                                  >
+                                    <DeleteIcon fontSize="small" />
+                                  </IconButton>
+                                </Stack>
+
+                                <TextField
+                                  fullWidth
+                                  size="small"
+                                  label="Color"
+                                  value={dot?.color || ""}
+                                  onChange={(e) => handleDotChange(index, "color", e.target.value)}
+                                  placeholder="e.g. #5ac8fa"
+                                  InputProps={{
+                                    sx: {
+                                      color: "#ffffff",
+                                      "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
+                                    },
+                                    endAdornment: (
+                                      <InputAdornment position="end">
+                                        <ColorSwatch
+                                          color={dot?.color || ""}
+                                          onChange={(fieldName, value) => handleDotColorChange(index, value)}
+                                          fieldName={`dot${index}Color`}
+                                        />
+                                      </InputAdornment>
+                                    ),
+                                  }}
+                                  InputLabelProps={{
+                                    sx: {
+                                      color: "rgba(255, 255, 255, 0.7)",
+                                      "&.Mui-focused": {
+                                        color: "#e9e224",
+                                      },
+                                    },
+                                  }}
+                                  sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                      "& fieldset": {
+                                        borderColor: "rgba(233, 226, 36, 0.3)",
+                                      },
+                                      "&:hover fieldset": {
+                                        borderColor: "rgba(233, 226, 36, 0.5)",
+                                      },
+                                      "&.Mui-focused fieldset": {
+                                        borderColor: "#e9e224",
+                                      },
+                                      backgroundColor: "rgba(255,255,255,0.05)",
+                                    },
+                                  }}
+                                />
+                              </Stack>
+                            </Paper>
+                          );
+                        })}
+                    </Stack>
+                  </Box>
+                )}
+              </Stack>
+            </Grid>
+          </Grid>
         </Stack>
 
         <Divider sx={{ borderColor: "rgba(233, 226, 36, 0.2)" }} />
-
-        {/* Logo Section - Show only when backgroundType is "colorLogo" (2nd option) */}
-        {formValues.backgroundType === "colorLogo" && (
-          <Stack spacing={2}>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ color: "#ffffff" }}>
-              Logo
-            </Typography>
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/jpg"
-              hidden
-              ref={fileInputRef}
-              onChange={handleFileChange}
-            />
-            <Button
-              variant="outlined"
-              startIcon={
-                isUploadingLogo ? (
-                  <CircularProgress size={18} />
-                ) : (
-                  <CloudUploadIcon />
-                )
-              }
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploadingLogo}
-              sx={{
-                px: 5,
-                py: 1.4,
-                alignSelf: "flex-start",
-                borderRadius: 3,
-                borderColor: "rgba(233, 226, 36, 0.5)",
-                backgroundColor: "rgba(233, 226, 36, 0.1)",
-                color: "#e9e224",
-                "&:hover": {
-                  borderColor: "#e9e224",
-                  backgroundColor: "rgba(233, 226, 36, 0.2)",
-                },
-              }}
-            >
-              Upload Logo
-            </Button>
-            
-            {imageError && (
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "#ff5252",
-                  backgroundColor: "rgba(255, 82, 82, 0.1)",
-                  padding: 1.5,
-                  borderRadius: 2,
-                  border: "1px solid rgba(255, 82, 82, 0.3)",
-                }}
-              >
-                {imageError}
-              </Typography>
-            )}
-          </Stack>
-        )}
       </Stack>
     </Box>
   );

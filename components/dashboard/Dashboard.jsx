@@ -491,6 +491,7 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [levelToDelete, setLevelToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [editorFormValues, setEditorFormValues] = useState(null);
 
   const canAddMoreLevels = levels.length < MAX_LEVELS;
 
@@ -535,24 +536,42 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
 
   const handleSelectLevel = (levelNumber) => {
     setSelectedLevel(levelNumber);
+    setEditorFormValues(null); // Reset form values when switching levels
   };
 
   // 🔹 sirf existing level update – backend already sirf DB update karega
-  const handleSaveLevel = async (payload, showNotification = false) => {
+  const handleSaveLevel = async (payload, showNotification = false, levelId = null) => {
     if (!selectedLevelData) return;
 
     setIsSaving(true);
     try {
-      const data = await fetchJson(`/api/levels/${selectedLevelData.level}`, {
+      // Use ID-based endpoint if levelId is provided (for partial updates)
+      // Otherwise fall back to level number endpoint (for full updates)
+      const endpoint = levelId 
+        ? `/api/levels/id/${levelId}`
+        : `/api/levels/${selectedLevelData.level}`;
+      
+      const data = await fetchJson(endpoint, {
         method: "PUT",
         body: JSON.stringify(payload),
       });
 
       const updated = data.level;
 
+      // Create a new object to ensure React detects the change
       setLevels((prev) =>
-        prev.map((lvl) => (lvl.level === updated.level ? updated : lvl))
+        prev.map((lvl) => 
+          (levelId && lvl._id === levelId) || (!levelId && lvl.level === updated.level)
+            ? { ...updated } // Create new object reference
+            : lvl
+        )
       );
+
+      // Update selected level data if it's the current one
+      if ((levelId && selectedLevelData._id === levelId) || (!levelId && selectedLevelData.level === updated.level)) {
+        // Force re-render by updating selected level data reference
+        setSelectedLevel((prev) => prev); // Trigger re-selection
+      }
 
       if (showNotification) {
         setAlertState({
@@ -961,25 +980,118 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
                     <CardContent
                       sx={{
                         p: { xs: 3, md: 4 },
-                        display: "grid",
+                        display: "flex",
+                        flexDirection: "column",
                         gap: 4,
-                        alignItems: "start",
-                        gridTemplateColumns: {
-                          xs: "1fr",
-                          md: "1fr 1fr",
-                        },
                       }}
                     >
-                      <LevelEditor
-                        level={selectedLevelData}
-                        onSave={handleSaveLevel}
-                        isSaving={isSaving}
-                        isUploadingLogo={isUploadingLogo}
-                        onUploadLogo={handleUploadLogo}
-                        onUploadBackgroundImage={handleUploadBackgroundImage}
-                        isUploadingBackgroundImage={isUploadingLogo}
-                      />
-                      <LevelPreview level={selectedLevelData} />
+                      {!selectedLevelData ? (
+                        <Stack spacing={2} alignItems="center" sx={{ py: 8 }} justifyContent="center">
+                          <Typography variant="h6" fontWeight={700} sx={{ color: "#ffffff" }}>
+                            No level selected
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.7)", textAlign: "center" }}>
+                            Choose a level from the directory to adjust its DotBack configuration, or create a new level to get started.
+                          </Typography>
+                        </Stack>
+                      ) : (
+                        <>
+                          {/* Row 1: Background Config (left) and Background Image Details (right) */}
+                          <Box
+                            sx={{
+                              display: "flex",
+                              flexDirection: {
+                                xs: "column",
+                                md: "row",
+                              },
+                              gap: 4,
+                              alignItems: "start",
+                            }}
+                          >
+                            <LevelEditor
+                              level={selectedLevelData}
+                              onSave={handleSaveLevel}
+                              isSaving={isSaving}
+                              isUploadingLogo={isUploadingLogo}
+                              onUploadLogo={handleUploadLogo}
+                              onUploadBackgroundImage={handleUploadBackgroundImage}
+                              isUploadingBackgroundImage={isUploadingLogo}
+                              backgroundOnly={true}
+                            />
+                            {/* REMOVED - Background Image Details section */}
+                            {/* <LevelEditor
+                              level={selectedLevelData}
+                              onSave={handleSaveLevel}
+                              isSaving={isSaving}
+                              isUploadingLogo={isUploadingLogo}
+                              onUploadLogo={handleUploadLogo}
+                              onUploadBackgroundImage={handleUploadBackgroundImage}
+                              isUploadingBackgroundImage={isUploadingLogo}
+                              showBackgroundDetails={true}
+                            /> */}
+                          </Box>
+
+                          {/* Row 2: Dot Sizes (left) and Colors (right) */}
+                          <Box
+                            sx={{
+                              display: "grid",
+                              gap: 4,
+                              alignItems: "stretch",
+                              gridTemplateColumns: {
+                                xs: "1fr",
+                                md: "1fr 1fr",
+                              },
+                            }}
+                          >
+                            <LevelEditor
+                              level={selectedLevelData}
+                              onSave={handleSaveLevel}
+                              isSaving={isSaving}
+                              isUploadingLogo={isUploadingLogo}
+                              onUploadLogo={handleUploadLogo}
+                              onUploadBackgroundImage={handleUploadBackgroundImage}
+                              isUploadingBackgroundImage={isUploadingLogo}
+                              dotSizesOnly={true}
+                            />
+                            <LevelEditor
+                              level={selectedLevelData}
+                              onSave={handleSaveLevel}
+                              isSaving={isSaving}
+                              isUploadingLogo={isUploadingLogo}
+                              onUploadLogo={handleUploadLogo}
+                              onUploadBackgroundImage={handleUploadBackgroundImage}
+                              isUploadingBackgroundImage={isUploadingLogo}
+                              colorsOnly={true}
+                            />
+                          </Box>
+
+                          {/* Row 3: Dots (left) and Mobile Preview (right) */}
+                          <Box
+                            sx={{
+                              display: "grid",
+                              gap: 4,
+                              alignItems: "start",
+                              gridTemplateColumns: {
+                                xs: "1fr",
+                                md: "1fr 1fr",
+                              },
+                            }}
+                          >
+                            <LevelEditor
+                              level={selectedLevelData}
+                              onSave={handleSaveLevel}
+                              isSaving={isSaving}
+                              isUploadingLogo={isUploadingLogo}
+                              onUploadLogo={handleUploadLogo}
+                              onUploadBackgroundImage={handleUploadBackgroundImage}
+                              isUploadingBackgroundImage={isUploadingLogo}
+                              dotsOnly={true}
+                              onFormValuesChange={setEditorFormValues}
+                            />
+                            <LevelPreview level={selectedLevelData} formValues={editorFormValues} />
+                          </Box>
+                        </>
+                      )}
                     </CardContent>
                   </Card>
                 </Box>

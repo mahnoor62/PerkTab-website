@@ -21,6 +21,7 @@ import {
   FormControlLabel,
   FormControl,
   FormLabel,
+  Grid,
 } from "@mui/material";
 import { useRef, useState, useEffect } from "react";
 import AddIcon from "@mui/icons-material/Add";
@@ -28,55 +29,32 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { getLogoUrl } from "@/lib/logo";
 
-// Predefined dot sizes that cycle: 20, 40, 60, 80, 100
-const PREDEFINED_DOT_SIZES = [20, 40, 60, 80, 100];
-
-// Predefined size scores that cycle: 10, 7, 5, 3, 1
-const PREDEFINED_SIZE_SCORES = [10, 7, 5, 3, 1];
-
-// Theme default colors that cycle when adding dots
-const THEME_DEFAULT_COLORS = [
-  "#e92434", // red
-  "#ff9e1d", // orange
-  "#e9e224", // yellow
-  "#36ceba", // cyan
-  "#000000", // black
+// Predefined theme colors with default scores
+const PREDEFINED_COLORS = [
+  { color: "#e92434", score: 5 },    // red
+  { color: "#ff9e1d", score: 15 },   // orange
+  { color: "#e9e224", score: 10 },    // yellow
+  { color: "#36ceba", score: 25 },   // cyan
+  { color: "#000000", score: 20 },   // black
 ];
 
-// Color scores mapping
-const COLOR_SCORES = {
-  "#e92434": 5,    // red
-  "#ff9e1d": 15,   // orange
-  "#e9e224": 10,   // yellow
-  "#000000": 20,   // black
-  "#36ceba": 25,   // cyan
-  "#ffffff": 30,   // white
-  "#fff": 30,      // white (alternative)
-  "white": 30,
-  "black": 20,
-  "red": 5,
-  "yellow": 10,
-  "orange": 15,
-  "cyan": 25,
+// Predefined dot sizes with default scores
+const PREDEFINED_DOT_SIZES = [
+  { size: "extra small", score: 10 },
+  { size: "small", score: 7 },
+  { size: "medium", score: 5 },
+  { size: "large", score: 3 },
+  { size: "extra large", score: 1 },
+];
+
+// Map size names to pixel values for UI display
+const SIZE_TO_PIXELS = {
+  "extra small": 20,
+  "small": 40,
+  "medium": 60,
+  "large": 80,
+  "extra large": 100,
 };
-
-// Get predefined dot size based on index (cycles through sizes)
-function getPredefinedDotSize(dotIndex) {
-  return PREDEFINED_DOT_SIZES[dotIndex % PREDEFINED_DOT_SIZES.length];
-}
-
-// Strip "px" or other units from size for display in input fields
-function stripSizeUnit(size) {
-  if (!size) return "";
-  const sizeStr = String(size).trim();
-  // Remove common CSS units
-  return sizeStr.replace(/px|em|rem|%|vh|vw|cm|mm|in|pt|pc$/i, "").trim();
-}
-
-// Get predefined size score based on index (cycles through scores)
-function getPredefinedSizeScore(dotIndex) {
-  return PREDEFINED_SIZE_SCORES[dotIndex % PREDEFINED_SIZE_SCORES.length];
-}
 
 // Get color score based on color value
 function getColorScore(color) {
@@ -84,9 +62,11 @@ function getColorScore(color) {
   
   const normalizedColor = color.trim().toLowerCase();
   
-  // Check exact matches first
-  if (COLOR_SCORES[normalizedColor] !== undefined) {
-    return COLOR_SCORES[normalizedColor];
+  // Check exact matches in predefined colors
+  for (const colorItem of PREDEFINED_COLORS) {
+    if (colorItem.color.toLowerCase() === normalizedColor) {
+      return colorItem.score;
+    }
   }
   
   // Check hex colors (normalize to lowercase)
@@ -94,29 +74,28 @@ function getColorScore(color) {
     ? normalizedColor 
     : `#${normalizedColor}`;
   
-  if (COLOR_SCORES[hexColor] !== undefined) {
-    return COLOR_SCORES[hexColor];
-  }
-  
-  // Try to match common color names in hex
-  const colorMap = {
-    "#e92434": 5,    // red
-    "#ff9e1d": 15,   // orange
-    "#e9e224": 10,   // yellow
-    "#000000": 20,   // black
-    "#36ceba": 25,   // cyan
-    "#ffffff": 30,   // white
-    "#fff": 30,
-  };
-  
-  // Normalize hex color (remove spaces, ensure # prefix)
-  const cleanHex = hexColor.replace(/\s+/g, "").toLowerCase();
-  if (colorMap[cleanHex] !== undefined) {
-    return colorMap[cleanHex];
+  for (const colorItem of PREDEFINED_COLORS) {
+    if (colorItem.color.toLowerCase() === hexColor) {
+      return colorItem.score;
+    }
   }
   
   // For other colors, default to 0
   return 0;
+}
+
+// Get a random color from the colors array
+function getRandomColor(colors) {
+  if (!colors || colors.length === 0) {
+    return PREDEFINED_COLORS[0].color; // default to first predefined color
+  }
+  const randomIndex = Math.floor(Math.random() * colors.length);
+  return colors[randomIndex].color;
+}
+
+// Get size name based on index (cycles through sizes)
+function getSizeNameForDot(dotIndex) {
+  return PREDEFINED_DOT_SIZES[dotIndex % PREDEFINED_DOT_SIZES.length].size;
 }
 
 const defaultFormState = {
@@ -124,6 +103,8 @@ const defaultFormState = {
   backgroundColor: "#f4f9ff",
   backgroundType: "color", // "color", "colorLogo", or "image"
   backgroundImageUrl: "",
+  colors: [...PREDEFINED_COLORS],
+  dotSizes: [...PREDEFINED_DOT_SIZES],
   dots: [],
   logoUrl: "",
 };
@@ -178,11 +159,17 @@ function ColorSwatch({ color, onChange, fieldName }) {
         sx={{
           width: 28,
           height: 28,
+          minWidth: 28,
+          minHeight: 28,
+          maxWidth: 28,
+          maxHeight: 28,
+          aspectRatio: "1/1",
           borderRadius: "50%",
           border: "1px solid rgba(255,255,255,0.6)",
           boxShadow: "0 4px 10px rgba(0,0,0,0.12)",
           background: color?.trim() || "transparent",
           cursor: "pointer",
+          flexShrink: 0,
           transition: "transform 0.2s, box-shadow 0.2s",
           "&:hover": {
             transform: "scale(1.1)",
@@ -312,7 +299,11 @@ export default function NewLevelDialog({
   };
 
   const resetAndClose = () => {
-    setFormValues(defaultFormState);
+    setFormValues({
+      ...defaultFormState,
+      colors: [...PREDEFINED_COLORS],
+      dotSizes: [...PREDEFINED_DOT_SIZES],
+    });
     setError(null);
     setImageError(null);
     setBackgroundImageError(null);
@@ -327,6 +318,8 @@ export default function NewLevelDialog({
         setFormValues((prev) => ({
           ...prev,
           level: String(nextLevel),
+          colors: prev.colors.length > 0 ? prev.colors : [...PREDEFINED_COLORS],
+          dotSizes: prev.dotSizes.length > 0 ? prev.dotSizes : [...PREDEFINED_DOT_SIZES],
         }));
       }
       // Reset error when dialog opens
@@ -347,24 +340,24 @@ export default function NewLevelDialog({
 
   const handleAddDot = () => {
     setFormValues((prev) => {
-      const newDotIndex = prev.dots.length;
-      const predefinedSize = getPredefinedDotSize(newDotIndex);
-      const predefinedSizeScore = getPredefinedSizeScore(newDotIndex);
-      // Cycle through theme default colors
-      const defaultColor = THEME_DEFAULT_COLORS[newDotIndex % THEME_DEFAULT_COLORS.length];
-      const colorScore = getColorScore(defaultColor);
-      const totalScore = predefinedSizeScore + colorScore;
+      // Use colors from the form (user-defined colors)
+      const availableColors = prev.colors && prev.colors.length > 0 ? prev.colors : PREDEFINED_COLORS;
+      // Cycle through colors evenly (round-robin) - no consecutive same colors
+      const currentDotIndex = prev.dots.length;
+      const colorIndex = currentDotIndex % availableColors.length;
+      const selectedColorItem = availableColors[colorIndex];
+      // Ensure color is always a string
+      const selectedColor = String(selectedColorItem?.color || "#000000");
+      // Use the score from the colors array, not calculate it
+      const colorScore = selectedColorItem?.score || getColorScore(selectedColor);
       
       return {
         ...prev,
         dots: [
           ...prev.dots,
           {
-            color: defaultColor,
-            size: String(predefinedSize),
-            sizeScore: predefinedSizeScore,
+            color: selectedColor,
             colorScore: colorScore,
-            totalScore: totalScore,
           },
         ],
       };
@@ -375,40 +368,10 @@ export default function NewLevelDialog({
     setFormValues((prev) => {
       const updatedDots = prev.dots.map((dot, i) => {
         if (i === index) {
-          const updated = { ...dot };
-          
-          // Handle different field types
-          if (field === "color") {
-            updated.color = value;
-            updated.colorScore = getColorScore(value);
-          } else if (field === "sizeScore") {
-            // Convert to number immediately
-            updated.sizeScore = value === "" ? 0 : Number(value) || 0;
-          } else if (field === "colorScore") {
-            // Convert to number immediately
-            updated.colorScore = value === "" ? 0 : Number(value) || 0;
-          } else if (field === "size") {
-            updated.size = value;
-            // If sizeScore is not set, update it
-            if (!dot.sizeScore || dot.sizeScore === 0 || dot.sizeScore === "0") {
-              updated.sizeScore = getPredefinedSizeScore(index);
-            }
-          } else {
-            updated[field] = value;
-          }
-          
-          // Convert sizeScore and colorScore to numbers for calculation
-          const sizeScoreNum = typeof updated.sizeScore === 'number' 
-            ? updated.sizeScore 
-            : (Number(updated.sizeScore) || 0);
-          const colorScoreNum = typeof updated.colorScore === 'number' 
-            ? updated.colorScore 
-            : (Number(updated.colorScore) || 0);
-          
-          // Update totalScore automatically
-          updated.totalScore = sizeScoreNum + colorScoreNum;
-          
-          return updated;
+          return {
+            ...dot,
+            [field]: value,
+          };
         }
         return dot;
       });
@@ -421,24 +384,77 @@ export default function NewLevelDialog({
   };
 
   const handleDotColorChange = (index, value) => {
-    // When color changes, automatically update colorScore and totalScore
-    const colorScore = getColorScore(value);
-    setFormValues((prev) => ({
-      ...prev,
-      dots: prev.dots.map((dot, i) => {
+    setFormValues((prev) => {
+      const colorScore = getColorScore(value);
+      return {
+        ...prev,
+        dots: prev.dots.map((dot, i) => {
+          if (i === index) {
+            return {
+              ...dot,
+              color: value,
+              colorScore: colorScore,
+            };
+          }
+          return dot;
+        }),
+      };
+    });
+  };
+
+  const handleColorChange = (index, field, value) => {
+    setFormValues((prev) => {
+      const updatedColors = prev.colors.map((colorItem, i) => {
         if (i === index) {
-          const sizeScoreNum = typeof dot.sizeScore === 'number' ? dot.sizeScore : (Number(dot.sizeScore) || 0);
           return {
-            ...dot,
-            color: value,
-            colorScore: colorScore,
-            totalScore: sizeScoreNum + colorScore,
+            ...colorItem,
+            [field]: field === "score" ? (value === "" ? 0 : Number(value) || 0) : value,
           };
         }
-        return dot;
-      }),
+        return colorItem;
+      });
+      return {
+        ...prev,
+        colors: updatedColors,
+      };
+    });
+  };
+
+  const handleAddColor = () => {
+    setFormValues((prev) => ({
+      ...prev,
+      colors: [
+        ...prev.colors,
+        { color: "#000000", score: 0 },
+      ],
     }));
   };
+
+  const handleRemoveColor = (index) => {
+    setFormValues((prev) => ({
+      ...prev,
+      colors: prev.colors.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleDotSizeChange = (index, field, value) => {
+    setFormValues((prev) => {
+      const updatedDotSizes = prev.dotSizes.map((sizeItem, i) => {
+        if (i === index) {
+          return {
+            ...sizeItem,
+            [field]: field === "score" ? (value === "" ? 0 : Number(value) || 0) : value,
+          };
+        }
+        return sizeItem;
+      });
+      return {
+        ...prev,
+        dotSizes: updatedDotSizes,
+      };
+    });
+  };
+
 
   const handleRemoveDot = (index) => {
     setFormValues((prev) => ({
@@ -451,42 +467,6 @@ export default function NewLevelDialog({
     setFormValues((prev) => ({ ...prev, [fieldName]: value }));
   };
 
-  const handleDefaultColors = () => {
-    // Use the same theme default colors
-    const defaultColorPalette = THEME_DEFAULT_COLORS;
-
-    setFormValues((prev) => {
-      const currentDotCount = prev.dots.length;
-      
-      // If no dots exist, don't add any
-      if (currentDotCount === 0) {
-        return {
-          ...prev,
-          backgroundColor: "#ffffff",
-        };
-      }
-
-      // Update existing dots with default colors (cycling through palette if needed)
-      // Also update colorScore and totalScore based on new colors
-      const updatedDots = prev.dots.map((dot, index) => {
-        const newColor = defaultColorPalette[index % defaultColorPalette.length];
-        const colorScore = getColorScore(newColor);
-        const sizeScoreNum = typeof dot.sizeScore === 'number' ? dot.sizeScore : (Number(dot.sizeScore) || 0);
-        return {
-          ...dot,
-          color: newColor,
-          colorScore: colorScore,
-          totalScore: sizeScoreNum + colorScore,
-        };
-      });
-
-      return {
-        ...prev,
-        backgroundColor: "#ffffff",
-        dots: updatedDots,
-      };
-    });
-  };
 
   const handleFileChange = async (event) => {
     const file = event.target.files?.[0];
@@ -574,11 +554,29 @@ export default function NewLevelDialog({
         ? formValues.backgroundImageUrl 
         : formValues.backgroundColor;
 
+      // Always ensure dotSizes are sent with default scores if empty or invalid
+      let dotSizesToSave = PREDEFINED_DOT_SIZES.map((s) => ({ size: s.size, score: s.score }));
+      if (formValues.dotSizes && Array.isArray(formValues.dotSizes) && formValues.dotSizes.length > 0) {
+        // Validate that all items have size property
+        const validDotSizes = formValues.dotSizes.filter((s) => s && s.size);
+        if (validDotSizes.length > 0) {
+          dotSizesToSave = validDotSizes.map((s) => ({
+            size: s.size || "",
+            score: typeof s.score === 'number' ? s.score : (Number(s.score) || 0),
+          }));
+        }
+      }
+
       await onCreate({
         level: levelNumber,
         background: backgroundValue,
         backgroundType: formValues.backgroundType, // Keep for UI logic
-        dots: formValues.dots,
+        colors: formValues.colors && formValues.colors.length > 0 ? formValues.colors : PREDEFINED_COLORS,
+        dotSizes: dotSizesToSave, // Always send dotSizes with structure: {size: String, score: Number}
+        dots: formValues.dots.map((dot) => ({
+          color: String(dot.color || ""),
+          colorScore: dot.colorScore !== undefined ? dot.colorScore : getColorScore(dot.color),
+        })),
         logoUrl: formValues.backgroundType === "image" ? "" : formValues.logoUrl,
       });
       resetAndClose();
@@ -634,25 +632,6 @@ export default function NewLevelDialog({
               </Typography>
             </Box>
           </Stack>
-          <Button
-            variant="outlined"
-            onClick={handleDefaultColors}
-            sx={{
-              borderRadius: 2,
-              borderColor: "rgba(233, 226, 36, 0.5)",
-              backgroundColor: "rgba(233, 226, 36, 0.1)",
-              color: "#e9e224",
-              px: 2,
-              py: 1,
-              whiteSpace: "nowrap",
-              "&:hover": {
-                borderColor: "#e9e224",
-                backgroundColor: "rgba(233, 226, 36, 0.2)",
-              },
-            }}
-          >
-            Default Color
-          </Button>
         </Stack>
       </DialogTitle>
       <DialogContent dividers sx={{ "&.MuiDialogContent-dividers": { borderColor: "rgba(233, 226, 36, 0.2)" } }}>
@@ -762,8 +741,8 @@ export default function NewLevelDialog({
             </RadioGroup>
           </FormControl>
 
-          {/* Background Color Field - Show for "color" and "colorLogo" */}
-          {(formValues.backgroundType === "color" || formValues.backgroundType === "colorLogo") && (
+          {/* Background Color Field - Show for "color" */}
+          {formValues.backgroundType === "color" && (
             <TextField
               label="Background Color"
               name="backgroundColor"
@@ -809,6 +788,139 @@ export default function NewLevelDialog({
             />
           )}
 
+          {/* Background Color & Logo - Show for "colorLogo" */}
+          {formValues.backgroundType === "colorLogo" && (
+            <Stack spacing={2}>
+              <TextField
+                fullWidth
+                label="Background Color"
+                name="backgroundColor"
+                value={formValues.backgroundColor}
+                onChange={handleChange}
+                InputProps={{
+                  sx: {
+                    color: "#ffffff",
+                    "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
+                  },
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <ColorSwatch
+                        color={formValues.backgroundColor}
+                        onChange={handleColorPickerChange}
+                        fieldName="backgroundColor"
+                      />
+                    </InputAdornment>
+                  ),
+                }}
+                InputLabelProps={{
+                  sx: {
+                    color: "rgba(255, 255, 255, 0.7)",
+                    "&.Mui-focused": {
+                      color: "#e9e224",
+                    },
+                  },
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "rgba(233, 226, 36, 0.3)",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "rgba(233, 226, 36, 0.5)",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#e9e224",
+                    },
+                    backgroundColor: "rgba(26, 26, 26, 0.5)",
+                  },
+                }}
+              />
+              <Stack spacing={1.5}>
+                <Typography variant="subtitle2" sx={{ color: "rgba(255, 255, 255, 0.8)" }}>
+                  Logo
+                </Typography>
+                {imageError && (
+                  <Typography variant="body2" sx={{ color: "#ff5252", mt: 0.5 }}>
+                    {imageError}
+                  </Typography>
+                )}
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "stretch", sm: "center" }}>
+                  <Box
+                    sx={{
+                      width: { xs: "100%", sm: 200 },
+                      height: 120,
+                      borderRadius: 3,
+                      border: "1px dashed rgba(233, 226, 36, 0.4)",
+                      backgroundColor: previewLogoUrl ? "transparent" : "rgba(26, 26, 26, 0.5)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                      position: "relative",
+                    }}
+                  >
+                    {previewLogoUrl ? (
+                      <Box
+                        component="img"
+                        src={previewLogoUrl}
+                        alt="Logo preview"
+                        sx={{
+                          maxWidth: "90%",
+                          maxHeight: "90%",
+                          objectFit: "contain",
+                        }}
+                      />
+                    ) : (
+                      <Typography sx={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "0.875rem" }}>
+                        No logo uploaded yet
+                      </Typography>
+                    )}
+                  </Box>
+                  <Box>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg"
+                      hidden
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                    />
+                    <Button
+                      variant="outlined"
+                      startIcon={
+                        isUploadingLogo ? (
+                          <CircularProgress size={18} />
+                        ) : (
+                          <CloudUploadIcon />
+                        )
+                      }
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploadingLogo || !onUploadLogo}
+                      sx={{
+                        px: 4,
+                        py: 1.2,
+                        borderRadius: 3,
+                        borderColor: "rgba(233, 226, 36, 0.5)",
+                        backgroundColor: "rgba(233, 226, 36, 0.1)",
+                        color: "#e9e224",
+                        whiteSpace: "nowrap",
+                        "&:hover": {
+                          borderColor: "#e9e224",
+                          backgroundColor: "rgba(233, 226, 36, 0.2)",
+                        },
+                        "&:disabled": {
+                          color: "rgba(255, 255, 255, 0.5)",
+                          borderColor: "rgba(255, 255, 255, 0.2)",
+                        },
+                      }}
+                    >
+                      {formValues.logoUrl ? "Replace Logo" : "Upload Logo"}
+                    </Button>
+                  </Box>
+                </Stack>
+              </Stack>
+            </Stack>
+          )}
+
           {/* Background Image Upload - Show for "image" */}
           {formValues.backgroundType === "image" && (
             <Stack spacing={1.5}>
@@ -823,8 +935,8 @@ export default function NewLevelDialog({
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "stretch", sm: "center" }}>
                 <Box
                   sx={{
-                    flex: 1,
-                    minHeight: 200,
+                    width: { xs: "100%", sm: 200 },
+                    height: 120,
                     borderRadius: 3,
                     border: "1px dashed rgba(233, 226, 36, 0.4)",
                     backgroundColor: previewBackgroundImageUrl ? "transparent" : "rgba(26, 26, 26, 0.5)",
@@ -833,16 +945,22 @@ export default function NewLevelDialog({
                     justifyContent: "center",
                     overflow: "hidden",
                     position: "relative",
-                    backgroundImage: previewBackgroundImageUrl
-                      ? `url(${previewBackgroundImageUrl})`
-                      : "none",
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    backgroundRepeat: "no-repeat",
                   }}
                 >
-                  {!previewBackgroundImageUrl && (
-                    <Typography sx={{ color: "rgba(255, 255, 255, 0.6)" }}>
+                  {previewBackgroundImageUrl ? (
+                    <Box
+                      component="img"
+                      src={previewBackgroundImageUrl}
+                      alt="Background preview"
+                      sx={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        borderRadius: 3,
+                      }}
+                    />
+                  ) : (
+                    <Typography sx={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "0.875rem" }}>
                       No background image uploaded yet
                     </Typography>
                   )}
@@ -895,9 +1013,275 @@ export default function NewLevelDialog({
           <Divider sx={{ borderColor: "rgba(233, 226, 36, 0.2)" }} />
 
           <Stack spacing={2}>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ color: "#ffffff" }}>
+              Edit Configuration
+            </Typography>
+
+            {/* Colors Configuration Panel */}
+            <Paper
+              sx={{
+                p: 2,
+                backgroundColor: "rgba(26, 26, 26, 0.5)",
+                border: "1px solid rgba(233, 226, 36, 0.3)",
+                borderRadius: 2,
+              }}
+            >
+              <Stack spacing={2}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                  <Typography variant="subtitle2" sx={{ color: "#ffffff", fontWeight: 600 }}>
+                    Colors
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<AddIcon />}
+                    onClick={handleAddColor}
+                    sx={{
+                      borderRadius: 2,
+                      borderColor: "rgba(233, 226, 36, 0.5)",
+                      backgroundColor: "rgba(233, 226, 36, 0.1)",
+                      color: "#e9e224",
+                      "&:hover": {
+                        borderColor: "#e9e224",
+                        backgroundColor: "rgba(233, 226, 36, 0.2)",
+                      },
+                    }}
+                  >
+                    Add Color
+                  </Button>
+                </Stack>
+                <Box
+                  sx={{
+                    maxHeight: "400px",
+                    overflowY: "auto",
+                    overflowX: "hidden",
+                    pr: 1,
+                    "&::-webkit-scrollbar": {
+                      width: "8px",
+                    },
+                    "&::-webkit-scrollbar-track": {
+                      background: "rgba(26, 26, 26, 0.5)",
+                      borderRadius: "4px",
+                    },
+                    "&::-webkit-scrollbar-thumb": {
+                      background: "rgba(233, 226, 36, 0.4)",
+                      borderRadius: "4px",
+                      "&:hover": {
+                        background: "rgba(233, 226, 36, 0.6)",
+                      },
+                    },
+                  }}
+                >
+                  <Grid container spacing={2}>
+                    {formValues.colors.map((colorItem, index) => (
+                      <Grid item xs={12} key={index}>
+                        <Stack direction="row" spacing={2} alignItems="flex-start" sx={{ pt: 1 }}>
+                          <Box sx={{ pt: 0.5 }}>
+                            <ColorSwatch
+                              color={colorItem.color}
+                              onChange={(fieldName, value) => handleColorChange(index, "color", value)}
+                              fieldName={`color${index}`}
+                            />
+                          </Box>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Color"
+                            value={colorItem.color}
+                            onChange={(e) => handleColorChange(index, "color", e.target.value)}
+                            InputProps={{
+                              sx: {
+                                color: "#ffffff",
+                                "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
+                              },
+                            }}
+                            InputLabelProps={{
+                              sx: {
+                                color: "rgba(255, 255, 255, 0.7)",
+                                "&.Mui-focused": {
+                                  color: "#e9e224",
+                                },
+                              },
+                            }}
+                            sx={{
+                              "& .MuiOutlinedInput-root": {
+                                "& fieldset": {
+                                  borderColor: "rgba(233, 226, 36, 0.3)",
+                                },
+                                "&:hover fieldset": {
+                                  borderColor: "rgba(233, 226, 36, 0.5)",
+                                },
+                                "&.Mui-focused fieldset": {
+                                  borderColor: "#e9e224",
+                                },
+                                backgroundColor: "rgba(255,255,255,0.05)",
+                              },
+                            }}
+                          />
+                          <TextField
+                            size="small"
+                            type="number"
+                            label="Score"
+                            value={colorItem.score}
+                            onChange={(e) => handleColorChange(index, "score", e.target.value)}
+                            sx={{
+                              width: 100,
+                              "& .MuiOutlinedInput-root": {
+                                "& fieldset": {
+                                  borderColor: "rgba(233, 226, 36, 0.3)",
+                                },
+                                "&:hover fieldset": {
+                                  borderColor: "rgba(233, 226, 36, 0.5)",
+                                },
+                                "&.Mui-focused fieldset": {
+                                  borderColor: "#e9e224",
+                                },
+                                backgroundColor: "rgba(255,255,255,0.05)",
+                                color: "#ffffff",
+                              },
+                            }}
+                            InputLabelProps={{
+                              sx: {
+                                color: "rgba(255, 255, 255, 0.7)",
+                                "&.Mui-focused": {
+                                  color: "#e9e224",
+                                },
+                              },
+                            }}
+                          />
+                          <Box sx={{ pt: 0.5 }}>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleRemoveColor(index)}
+                              sx={{
+                                color: "#ff5252",
+                                "&:hover": {
+                                  backgroundColor: "rgba(255, 82, 82, 0.1)",
+                                },
+                              }}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Box>
+                        </Stack>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
+              </Stack>
+            </Paper>
+
+            {/* Dot Sizes Configuration Panel */}
+            <Paper
+              sx={{
+                p: 2,
+                backgroundColor: "rgba(26, 26, 26, 0.5)",
+                border: "1px solid rgba(233, 226, 36, 0.3)",
+                borderRadius: 2,
+              }}
+            >
+              <Stack spacing={2}>
+                <Typography variant="subtitle2" sx={{ color: "#ffffff", fontWeight: 600 }}>
+                  Dot Sizes
+                </Typography>
+                <Box
+                  sx={{
+                    maxHeight: "400px",
+                    overflowY: "auto",
+                    overflowX: "hidden",
+                    pr: 1,
+                    "&::-webkit-scrollbar": {
+                      width: "8px",
+                    },
+                    "&::-webkit-scrollbar-track": {
+                      background: "rgba(26, 26, 26, 0.5)",
+                      borderRadius: "4px",
+                    },
+                    "&::-webkit-scrollbar-thumb": {
+                      background: "rgba(233, 226, 36, 0.4)",
+                      borderRadius: "4px",
+                      "&:hover": {
+                        background: "rgba(233, 226, 36, 0.6)",
+                      },
+                    },
+                  }}
+                >
+                  <Grid container spacing={2}>
+                    {formValues.dotSizes.map((sizeItem, index) => (
+                      <Grid item xs={12} key={index}>
+                        <Stack direction="row" spacing={2} alignItems="flex-start" sx={{ pt: 1 }}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Size"
+                            value={sizeItem.size}
+                            disabled
+                            InputProps={{
+                              sx: {
+                                color: "#ffffff",
+                              },
+                            }}
+                            InputLabelProps={{
+                              sx: {
+                                color: "rgba(255, 255, 255, 0.7)",
+                              },
+                            }}
+                            sx={{
+                              "& .MuiOutlinedInput-root": {
+                                "& fieldset": {
+                                  borderColor: "rgba(233, 226, 36, 0.3)",
+                                },
+                                backgroundColor: "rgba(255,255,255,0.05)",
+                                "&.Mui-disabled": {
+                                  backgroundColor: "rgba(255,255,255,0.02)",
+                                },
+                              },
+                            }}
+                          />
+                          <TextField
+                            size="small"
+                            type="number"
+                            label="Score"
+                            value={sizeItem.score}
+                            onChange={(e) => handleDotSizeChange(index, "score", e.target.value)}
+                            sx={{
+                              width: 100,
+                              "& .MuiOutlinedInput-root": {
+                                "& fieldset": {
+                                  borderColor: "rgba(233, 226, 36, 0.3)",
+                                },
+                                "&:hover fieldset": {
+                                  borderColor: "rgba(233, 226, 36, 0.5)",
+                                },
+                                "&.Mui-focused fieldset": {
+                                  borderColor: "#e9e224",
+                                },
+                                backgroundColor: "rgba(255,255,255,0.05)",
+                                color: "#ffffff",
+                              },
+                            }}
+                            InputLabelProps={{
+                              sx: {
+                                color: "rgba(255, 255, 255, 0.7)",
+                                "&.Mui-focused": {
+                                  color: "#e9e224",
+                                },
+                              },
+                            }}
+                          />
+                        </Stack>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
+              </Stack>
+            </Paper>
+
+            <Divider sx={{ borderColor: "rgba(233, 226, 36, 0.2)" }} />
+
             <Stack direction="row" justifyContent="space-between" alignItems="center">
               <Typography variant="subtitle1" fontWeight={600} sx={{ color: "#ffffff" }}>
-                Add Configuration
+                Dots
               </Typography>
               <Button
                 variant="outlined"
@@ -946,7 +1330,10 @@ export default function NewLevelDialog({
                 }}
               >
                 <Stack spacing={2}>
-                  {formValues.dots.map((dot, index) => (
+                {formValues.dots.map((dot, index) => {
+                  // Use small size for UI display (40px) - dot sizes shown in preview only
+                  const displaySize = 40;
+                  return (
                     <Paper
                       key={index}
                       sx={{
@@ -958,9 +1345,28 @@ export default function NewLevelDialog({
                     >
                       <Stack spacing={2}>
                         <Stack direction="row" justifyContent="space-between" alignItems="center">
-                          <Typography variant="subtitle2" sx={{ color: "#ffffff", fontWeight: 600 }}>
-                            Dot {index + 1}
-                          </Typography>
+                          <Stack direction="row" spacing={1.5} alignItems="center">
+                            <Box
+                              sx={{
+                                width: displaySize,
+                                height: displaySize,
+                                minWidth: displaySize,
+                                minHeight: displaySize,
+                                maxWidth: displaySize,
+                                maxHeight: displaySize,
+                                aspectRatio: "1/1",
+                                borderRadius: "50%",
+                                backgroundColor: dot.color?.trim() || "transparent",
+                                border: "1px solid rgba(255,255,255,0.3)",
+                                flexShrink: 0,
+                              }}
+                            />
+                            <Stack>
+                              <Typography variant="subtitle2" sx={{ color: "#ffffff", fontWeight: 600 }}>
+                                Dot {index + 1}
+                              </Typography>
+                            </Stack>
+                          </Stack>
                           <IconButton
                             size="small"
                             onClick={() => handleRemoveDot(index)}
@@ -975,66 +1381,27 @@ export default function NewLevelDialog({
                           </IconButton>
                         </Stack>
 
-                        <TextField
-                          fullWidth
-                          size="small"
-                          label="Color"
-                          value={dot.color}
-                          onChange={(e) => handleDotChange(index, "color", e.target.value)}
-                          placeholder="e.g. #5ac8fa"
-                          InputProps={{
-                            sx: {
-                              color: "#ffffff",
-                              "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
-                            },
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                <ColorSwatch
-                                  color={dot.color}
-                                  onChange={(fieldName, value) => handleDotColorChange(index, value)}
-                                  fieldName={`dot${index}Color`}
-                                />
-                              </InputAdornment>
-                            ),
-                          }}
-                          InputLabelProps={{
-                            sx: {
-                              color: "rgba(255, 255, 255, 0.7)",
-                              "&.Mui-focused": {
-                                color: "#e9e224",
-                              },
-                            },
-                          }}
-                          sx={{
-                            "& .MuiOutlinedInput-root": {
-                              "& fieldset": {
-                                borderColor: "rgba(233, 226, 36, 0.3)",
-                              },
-                              "&:hover fieldset": {
-                                borderColor: "rgba(233, 226, 36, 0.5)",
-                              },
-                              "&.Mui-focused fieldset": {
-                                borderColor: "#e9e224",
-                              },
-                              backgroundColor: "rgba(255,255,255,0.05)",
-                            },
-                          }}
-                        />
-
-                        <Stack direction="row" spacing={2}>
                           <TextField
                             fullWidth
                             size="small"
-                            type="text"
-                            label="Size"
-                            value={dot.size || String(getPredefinedDotSize(index))}
-                            onChange={(e) => handleDotChange(index, "size", e.target.value)}
-                            placeholder="e.g. 36"
+                            label="Color"
+                            value={dot.color}
+                            onChange={(e) => handleDotChange(index, "color", e.target.value)}
+                            placeholder="e.g. #5ac8fa"
                             InputProps={{
                               sx: {
                                 color: "#ffffff",
                                 "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
                               },
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  <ColorSwatch
+                                    color={dot.color}
+                                    onChange={(fieldName, value) => handleDotColorChange(index, value)}
+                                    fieldName={`dot${index}Color`}
+                                  />
+                                </InputAdornment>
+                              ),
                             }}
                             InputLabelProps={{
                               sx: {
@@ -1056,235 +1423,19 @@ export default function NewLevelDialog({
                                   borderColor: "#e9e224",
                                 },
                                 backgroundColor: "rgba(255,255,255,0.05)",
-                              },
-                            }}
-                          />
-
-                          <TextField
-                            fullWidth
-                            size="small"
-                            type="number"
-                            label="Size Score"
-                            value={dot.sizeScore !== undefined && dot.sizeScore !== null ? (typeof dot.sizeScore === 'number' ? dot.sizeScore : Number(dot.sizeScore) || 0) : 0}
-                            onChange={(e) => {
-                              const newValue = e.target.value;
-                              handleDotChange(index, "sizeScore", newValue);
-                            }}
-                            placeholder="e.g. 0"
-                            InputProps={{
-                              sx: {
-                                color: "#ffffff",
-                                "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
-                              },
-                            }}
-                            InputLabelProps={{
-                              sx: {
-                                color: "rgba(255, 255, 255, 0.7)",
-                                "&.Mui-focused": {
-                                  color: "#e9e224",
-                                },
-                              },
-                            }}
-                            sx={{
-                              "& .MuiOutlinedInput-root": {
-                                "& fieldset": {
-                                  borderColor: "rgba(233, 226, 36, 0.3)",
-                                },
-                                "&:hover fieldset": {
-                                  borderColor: "rgba(233, 226, 36, 0.5)",
-                                },
-                                "&.Mui-focused fieldset": {
-                                  borderColor: "#e9e224",
-                                },
-                                backgroundColor: "rgba(255,255,255,0.05)",
-                              },
-                            }}
-                          />
-
-                          <TextField
-                            fullWidth
-                            size="small"
-                            type="number"
-                            label="Color Score"
-                            value={dot.colorScore !== undefined && dot.colorScore !== null ? (typeof dot.colorScore === 'number' ? dot.colorScore : Number(dot.colorScore) || 0) : 0}
-                            onChange={(e) => {
-                              const newValue = e.target.value;
-                              handleDotChange(index, "colorScore", newValue);
-                            }}
-                            placeholder="e.g. 0"
-                            InputProps={{
-                              sx: {
-                                color: "#ffffff",
-                                "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
-                              },
-                            }}
-                            InputLabelProps={{
-                              sx: {
-                                color: "rgba(255, 255, 255, 0.7)",
-                                "&.Mui-focused": {
-                                  color: "#e9e224",
-                                },
-                              },
-                            }}
-                            sx={{
-                              "& .MuiOutlinedInput-root": {
-                                "& fieldset": {
-                                  borderColor: "rgba(233, 226, 36, 0.3)",
-                                },
-                                "&:hover fieldset": {
-                                  borderColor: "rgba(233, 226, 36, 0.5)",
-                                },
-                                "&.Mui-focused fieldset": {
-                                  borderColor: "#e9e224",
-                                },
-                                backgroundColor: "rgba(255,255,255,0.05)",
-                              },
-                            }}
-                          />
-
-                          <TextField
-                            fullWidth
-                            size="small"
-                            type="number"
-                            label="Score (Total)"
-                            value={(() => {
-                              const sizeScore = typeof dot.sizeScore === 'number' ? dot.sizeScore : (parseFloat(dot.sizeScore || "0") || 0);
-                              const colorScore = typeof dot.colorScore === 'number' ? dot.colorScore : (parseFloat(dot.colorScore || "0") || 0);
-                              return sizeScore + colorScore;
-                            })()}
-                            disabled
-                            InputProps={{
-                              sx: {
-                                color: "#ffffff",
-                                "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
-                              },
-                            }}
-                            InputLabelProps={{
-                              sx: {
-                                color: "rgba(255, 255, 255, 0.7)",
-                              },
-                            }}
-                            sx={{
-                              "& .MuiOutlinedInput-root": {
-                                "& fieldset": {
-                                  borderColor: "rgba(233, 226, 36, 0.3)",
-                                },
-                                backgroundColor: "rgba(255,255,255,0.05)",
-                                "&.Mui-disabled": {
-                                  backgroundColor: "rgba(255,255,255,0.02)",
-                                },
                               },
                             }}
                           />
                         </Stack>
-                      </Stack>
-                    </Paper>
-                  ))}
+                      </Paper>
+                    );
+                  })}
                 </Stack>
               </Box>
             )}
           </Stack>
 
           <Divider sx={{ borderColor: "rgba(233, 226, 36, 0.2)" }} />
-
-          {/* Logo Section - Show only when backgroundType is "colorLogo" */}
-          {formValues.backgroundType === "colorLogo" && (
-            <Stack spacing={1.5}>
-            <Typography variant="subtitle2" sx={{ color: "rgba(255, 255, 255, 0.8)" }}>
-              Logo (optional)
-            </Typography>
-
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "stretch", sm: "center" }}>
-              <Box
-                sx={{
-                  flex: 1,
-                  minHeight: 120,
-                  borderRadius: 3,
-                  border: "1px dashed rgba(233, 226, 36, 0.4)",
-                  backgroundColor: "rgba(26, 26, 26, 0.5)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  overflow: "hidden",
-                  position: "relative",
-                }}
-              >
-                {previewLogoUrl ? (
-                  <Box
-                    component="img"
-                    src={previewLogoUrl}
-                    alt="Uploaded logo preview"
-                    sx={{
-                      maxWidth: "100%",
-                      maxHeight: "100%",
-                      objectFit: "contain",
-                    }}
-                  />
-                ) : (
-                  <Typography sx={{ color: "rgba(255, 255, 255, 0.6)" }}>
-                    No logo uploaded yet
-                  </Typography>
-                )}
-              </Box>
-
-              <Box>
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/jpg"
-                  hidden
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                />
-                <Button
-                  variant="outlined"
-                  startIcon={
-                    isUploadingLogo ? (
-                      <CircularProgress size={18} />
-                    ) : (
-                      <CloudUploadIcon />
-                    )
-                  }
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploadingLogo || !onUploadLogo}
-                  sx={{
-                    px: 4,
-                    py: 1.2,
-                    borderRadius: 3,
-                    borderColor: "rgba(233, 226, 36, 0.5)",
-                    backgroundColor: "rgba(233, 226, 36, 0.1)",
-                    color: "#e9e224",
-                    whiteSpace: "nowrap",
-                    "&:hover": {
-                      borderColor: "#e9e224",
-                      backgroundColor: "rgba(233, 226, 36, 0.2)",
-                    },
-                    "&:disabled": {
-                      color: "rgba(255, 255, 255, 0.5)",
-                      borderColor: "rgba(255, 255, 255, 0.2)",
-                    },
-                  }}
-                >
-                  {formValues.logoUrl ? "Replace Logo" : "Upload Logo"}
-                </Button>
-              </Box>
-            </Stack>
-            
-            {imageError && (
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "#ff5252",
-                  backgroundColor: "rgba(255, 82, 82, 0.1)",
-                  padding: 1.5,
-                  borderRadius: 2,
-                  border: "1px solid rgba(255, 82, 82, 0.3)",
-                }}
-              >
-                {imageError}
-              </Typography>
-            )}
-            </Stack>
-          )}
 
           {error ? (
             <Typography 

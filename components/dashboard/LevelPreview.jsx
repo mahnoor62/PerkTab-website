@@ -3,7 +3,7 @@
 import { Box, Stack, Typography } from "@mui/material";
 import { getLogoUrl } from "@/lib/logo";
 
-export default function LevelPreview({ level }) {
+export default function LevelPreview({ level, formValues = null }) {
   if (!level) {
     return (
       <Stack spacing={2} alignItems="center" justifyContent="center">
@@ -17,9 +17,22 @@ export default function LevelPreview({ level }) {
     );
   }
 
-  const dots = Array.isArray(level.dots) ? level.dots : [];
+  // Use formValues if provided for real-time preview, otherwise use level data
+  const previewData = formValues ? {
+    dots: formValues.dots || level.dots || [],
+    background: formValues.backgroundType === "image" 
+      ? formValues.backgroundImageUrl 
+      : formValues.backgroundColor || level.background || "",
+    logoUrl: formValues.backgroundType === "image" ? "" : (formValues.logoUrl || level.logoUrl || ""),
+  } : {
+    dots: level.dots || [],
+    background: level.background || "",
+    logoUrl: level.logoUrl || "",
+  };
+
+  const dots = Array.isArray(previewData.dots) ? previewData.dots : [];
   // Determine background type: if background starts with http, https, or /uploads/, it's an image URL; otherwise it's a color
-  const background = level.background?.trim() || "#e9e224";
+  const background = previewData.background?.trim() || "#e9e224";
   
   // Check if it's an image URL (starts with http, https, or /uploads/)
   // Exclude hex colors and common color formats
@@ -201,8 +214,12 @@ export default function LevelPreview({ level }) {
                   position: "absolute",
                   width: sizeValue,
                   height: sizeValue,
+                  minWidth: sizeValue,
+                  minHeight: sizeValue,
+                  maxWidth: sizeValue,
+                  maxHeight: sizeValue,
+                  aspectRatio: "1/1",
                   borderRadius: "50%",
-                  mt:5,mb:5,
                   background: color,
                   boxShadow: "0 8px 16px rgba(0,0,0,0.25)",
                   border: "2px solid rgba(255,255,255,0.35)",
@@ -211,6 +228,7 @@ export default function LevelPreview({ level }) {
                   left: position.left,
                   transform: "translate(-50%, -50%)",
                   zIndex: 1,
+                  flexShrink: 0,
                   "&:hover": {
                     transform: "translate(-50%, -50%) scale(1.05)",
                     boxShadow: "0 12px 24px rgba(0,0,0,0.35)",
@@ -221,13 +239,13 @@ export default function LevelPreview({ level }) {
             );
           })}
 
-          {level.logoUrl && !isImageUrl && (
+          {previewData.logoUrl && !isImageUrl && (
             <Box
               component="img"
-              src={getLogoUrl(level.logoUrl)}
+              src={getLogoUrl(previewData.logoUrl)}
               alt={`Level ${level.level} logo`}
               onError={(e) => {
-                console.error("Failed to load logo:", level.logoUrl);
+                console.error("Failed to load logo:", previewData.logoUrl);
                 e.target.style.display = "none";
               }}
               sx={{
