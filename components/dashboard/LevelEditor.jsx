@@ -513,30 +513,43 @@ export default function LevelEditor({
 
   const handleAddDot = () => {
     setFormValues((prev) => {
-      // Ensure we have valid colors array - filter out any null/undefined
+      // Use colors from the form values (colors array) - filter out any null/undefined
       const validColors = (prev.colors || [])
-        .filter((c) => c != null && c.color != null)
+        .filter((c) => c != null && c.color != null && String(c.color).trim() !== "")
         .map((c) => ({
-          color: String(c.color || ""),
+          color: String(c.color || "").trim(),
           score: typeof c.score === 'number' ? c.score : (Number(c.score) || 0),
         }));
       
-      // Use colors from the form (user-defined colors) or fallback to predefined
-      const availableColors = validColors.length > 0 ? validColors : PREDEFINED_COLORS;
-      
-      // Ensure availableColors is never empty
-      if (availableColors.length === 0) {
-        console.warn("[handleAddDot] No valid colors available, using default");
-        return prev;
+      // Ensure we have valid colors from the colors array
+      if (validColors.length === 0) {
+        console.warn("[handleAddDot] No valid colors in colors array, using predefined colors");
+        const fallbackColors = PREDEFINED_COLORS;
+        const currentDotIndex = (prev.dots || []).length;
+        const colorIndex = currentDotIndex % fallbackColors.length;
+        const selectedColorItem = fallbackColors[colorIndex];
+        
+        const newValues = {
+          ...prev,
+          dots: [
+            ...(prev.dots || []),
+            {
+              color: selectedColorItem.color,
+              colorScore: selectedColorItem.score || 0,
+            },
+          ],
+        };
+        autoSave(newValues);
+        return newValues;
       }
       
-      // Cycle through colors evenly (round-robin) - no consecutive same colors
+      // Cycle through colors from the colors array evenly (round-robin)
       const currentDotIndex = (prev.dots || []).length;
-      const colorIndex = currentDotIndex % availableColors.length;
-      const selectedColorItem = availableColors[colorIndex];
+      const colorIndex = currentDotIndex % validColors.length;
+      const selectedColorItem = validColors[colorIndex];
       
       // Ensure color is always a string
-      const selectedColor = String(selectedColorItem?.color || "#000000");
+      const selectedColor = String(selectedColorItem?.color || "").trim();
       // Use the score from the colors array
       const colorScore = typeof selectedColorItem?.score === 'number' 
         ? selectedColorItem.score 
@@ -544,7 +557,6 @@ export default function LevelEditor({
       
       const newValues = {
         ...prev,
-        colors: availableColors, // Ensure colors are valid
         dots: [
           ...(prev.dots || []),
           {
