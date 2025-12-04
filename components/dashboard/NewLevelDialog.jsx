@@ -118,6 +118,7 @@ const defaultFormState = {
   dotSizes: [...PREDEFINED_DOT_SIZES],
   dots: [],
   logoUrl: "",
+  targetScore: 0,
 };
 
 function ColorSwatch({ color, onChange, fieldName }) {
@@ -624,6 +625,7 @@ export default function NewLevelDialog({
           colorScore: dot.colorScore !== undefined ? dot.colorScore : getColorScore(dot.color),
         })),
         logoUrl: formValues.backgroundType === "image" ? "" : formValues.logoUrl,
+        targetScore: typeof formValues.targetScore === 'number' ? formValues.targetScore : (Number(formValues.targetScore) || 0),
       });
       resetAndClose();
     } catch (err) {
@@ -695,6 +697,51 @@ export default function NewLevelDialog({
               max: 10,
             }}
             helperText="Enter an integer between 1 and 10."
+            InputProps={{
+              sx: {
+                color: "#ffffff",
+                "& input::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
+              },
+            }}
+            InputLabelProps={{
+              sx: {
+                color: "rgba(255, 255, 255, 0.7)",
+                "&.Mui-focused": {
+                  color: "#e9e224",
+                },
+              },
+            }}
+            FormHelperTextProps={{
+              sx: {
+                color: "rgba(255, 255, 255, 0.6)",
+              },
+            }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "rgba(233, 226, 36, 0.3)",
+                },
+                "&:hover fieldset": {
+                  borderColor: "rgba(233, 226, 36, 0.5)",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#e9e224",
+                },
+                backgroundColor: "rgba(26, 26, 26, 0.5)",
+              },
+            }}
+          />
+
+          {/* Target Score Field */}
+          <TextField
+            type="number"
+            label="Target Score"
+            name="targetScore"
+            value={formValues.targetScore}
+            onChange={handleChange}
+            inputProps={{
+              min: 0,
+            }}
             InputProps={{
               sx: {
                 color: "#ffffff",

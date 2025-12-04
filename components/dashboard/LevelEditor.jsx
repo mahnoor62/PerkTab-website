@@ -282,6 +282,7 @@ export default function LevelEditor({
     dotSizes: [...PREDEFINED_DOT_SIZES],
     dots: [],
     logoUrl: "",
+    targetScore: 0,
   }));
   const [imageError, setImageError] = useState(null);
   const [backgroundImageError, setBackgroundImageError] = useState(null);
@@ -407,6 +408,7 @@ export default function LevelEditor({
         dotSizes: safeDotSizes,
         dots: initializedDots,
         logoUrl: level.logoUrl || "",
+        targetScore: typeof level.targetScore === 'number' ? level.targetScore : (level.targetScore !== undefined ? Number(level.targetScore) || 0 : 0),
       };
       
       setFormValues(initialFormValues);
@@ -417,6 +419,7 @@ export default function LevelEditor({
         dotSizes: JSON.stringify(safeDotSizes),
         dots: JSON.stringify(initializedDots),
         logoUrl: level.logoUrl || "",
+        targetScore: initialFormValues.targetScore,
       };
       setBackgroundImageError(null);
       
@@ -445,12 +448,15 @@ export default function LevelEditor({
       ? formValues.backgroundImageUrl 
       : formValues.backgroundColor;
     
+    const targetScoreChanged = formValues.targetScore !== (level.targetScore !== undefined ? Number(level.targetScore) : 0);
+    
     return (
       currentBackground !== (level.background || "") ||
       formValues.logoUrl !== (level.logoUrl || "") ||
       dotsChanged ||
       colorsChanged ||
-      dotSizesChanged
+      dotSizesChanged ||
+      targetScoreChanged
     );
   }, [formValues, level]);
 
@@ -516,6 +522,11 @@ export default function LevelEditor({
             .filter((dot) => dot != null)
         : [];
 
+      // Process targetScore
+      const targetScore = values.targetScore !== undefined && values.targetScore !== null
+        ? (typeof values.targetScore === 'number' ? values.targetScore : (Number(values.targetScore) || 0))
+        : 0;
+
       // Build current state for comparison
       const currentState = {
         background: finalBackgroundValue,
@@ -523,6 +534,7 @@ export default function LevelEditor({
         dotSizes: JSON.stringify(dotSizesToSave),
         dots: JSON.stringify(processedDots),
         logoUrl: values.backgroundType === "image" ? "" : (values.logoUrl || ""),
+        targetScore: targetScore,
       };
 
       // Build payload with ONLY changed fields
@@ -546,6 +558,10 @@ export default function LevelEditor({
       
       if (!lastSavedStateRef.current || currentState.logoUrl !== lastSavedStateRef.current.logoUrl) {
         payload.logoUrl = values.backgroundType === "image" ? "" : (values.logoUrl || "");
+      }
+      
+      if (!lastSavedStateRef.current || currentState.targetScore !== lastSavedStateRef.current.targetScore) {
+        payload.targetScore = targetScore;
       }
 
       // Only save if there are changes
@@ -1600,6 +1616,71 @@ export default function LevelEditor({
               </Stack>
             </Stack>
           )}
+          
+          {/* Target Score Configuration - Show in backgroundOnly view too */}
+          <Paper
+            sx={{
+              p: 2,
+              backgroundColor: "rgba(26, 26, 26, 0.5)",
+              border: "1px solid rgba(233, 226, 36, 0.3)",
+              borderRadius: 2,
+            }}
+          >
+            <Stack spacing={1.5}>
+              <Typography variant="subtitle2" sx={{ color: "#ffffff", fontWeight: 600 }}>
+                Target Score
+              </Typography>
+              <TextField
+                fullWidth
+                type="number"
+                label="Target Score"
+                name="targetScore"
+                value={formValues.targetScore !== undefined && formValues.targetScore !== null ? formValues.targetScore : 0}
+                onChange={handleInputChange}
+                placeholder="Enter target score"
+                inputProps={{
+                  min: 0,
+                }}
+                InputProps={{
+                  sx: {
+                    borderRadius: 2.5,
+                    backgroundColor: "rgba(255,255,255,0.1)",
+                    color: "#ffffff",
+                    "& input": {
+                      color: "#ffffff",
+                      "&::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
+                    },
+                  },
+                }}
+                InputLabelProps={{
+                  sx: {
+                    color: "rgba(255, 255, 255, 0.7)",
+                    "&.Mui-focused": {
+                      color: "#e9e224",
+                    },
+                  },
+                }}
+                FormHelperTextProps={{
+                  sx: {
+                    color: "rgba(255, 255, 255, 0.6)",
+                  },
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "rgba(233, 226, 36, 0.3)",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "rgba(233, 226, 36, 0.5)",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#e9e224",
+                    },
+                  },
+                }}
+              />
+            </Stack>
+          </Paper>
         </Stack>
         {backgroundOnly && <Stack />}
       </Stack>
@@ -1968,6 +2049,71 @@ export default function LevelEditor({
         </Box>
 
         <Stack spacing={2}>
+
+          {/* Target Score Configuration */}
+          <Paper
+            sx={{
+              p: 2,
+              backgroundColor: "rgba(26, 26, 26, 0.5)",
+              border: "1px solid rgba(233, 226, 36, 0.3)",
+              borderRadius: 2,
+            }}
+          >
+            <Stack spacing={1.5}>
+              <Typography variant="subtitle2" sx={{ color: "#ffffff", fontWeight: 600 }}>
+                Target Score
+              </Typography>
+              <TextField
+                fullWidth
+                type="number"
+                label="Target Score"
+                name="targetScore"
+                value={formValues.targetScore !== undefined && formValues.targetScore !== null ? formValues.targetScore : 0}
+                onChange={handleInputChange}
+                placeholder="Enter target score"
+                inputProps={{
+                  min: 0,
+                }}
+                InputProps={{
+                  sx: {
+                    borderRadius: 2.5,
+                    backgroundColor: "rgba(255,255,255,0.1)",
+                    color: "#ffffff",
+                    "& input": {
+                      color: "#ffffff",
+                      "&::placeholder": { color: "rgba(255, 255, 255, 0.5)", opacity: 1 },
+                    },
+                  },
+                }}
+                InputLabelProps={{
+                  sx: {
+                    color: "rgba(255, 255, 255, 0.7)",
+                    "&.Mui-focused": {
+                      color: "#e9e224",
+                    },
+                  },
+                }}
+                FormHelperTextProps={{
+                  sx: {
+                    color: "rgba(255, 255, 255, 0.6)",
+                  },
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "rgba(233, 226, 36, 0.3)",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "rgba(233, 226, 36, 0.5)",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#e9e224",
+                    },
+                  },
+                }}
+              />
+            </Stack>
+          </Paper>
 
           {/* Colors Configuration Panel */}
           {!hideColors && (
