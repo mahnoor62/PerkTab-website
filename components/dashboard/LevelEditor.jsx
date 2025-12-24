@@ -18,6 +18,10 @@ import {
   FormControl,
   FormLabel,
   Grid,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -286,6 +290,8 @@ export default function LevelEditor({
   }));
   const [imageError, setImageError] = useState(null);
   const [backgroundImageError, setBackgroundImageError] = useState(null);
+  const [dotToDelete, setDotToDelete] = useState(null);
+  const [deleteDotDialogOpen, setDeleteDotDialogOpen] = useState(false);
   const fileInputRef = useRef(null);
   const backgroundImageInputRef = useRef(null);
   const saveTimeoutRef = useRef(null);
@@ -903,14 +909,29 @@ export default function LevelEditor({
   };
 
   const handleRemoveDot = (index) => {
+    setDotToDelete(index);
+    setDeleteDotDialogOpen(true);
+  };
+
+  const handleConfirmDeleteDot = () => {
+    if (dotToDelete === null) return;
+    
     setFormValues((prev) => {
       const newValues = {
         ...prev,
-        dots: prev.dots.filter((_, i) => i !== index),
+        dots: prev.dots.filter((_, i) => i !== dotToDelete),
       };
       autoSave(newValues);
       return newValues;
     });
+    
+    setDeleteDotDialogOpen(false);
+    setDotToDelete(null);
+  };
+
+  const handleCancelDeleteDot = () => {
+    setDeleteDotDialogOpen(false);
+    setDotToDelete(null);
   };
 
   const handleSubmit = (event) => {
@@ -1871,6 +1892,7 @@ export default function LevelEditor({
   // If dotsOnly is true, show only dots
   if (dotsOnly) {
     return (
+      <>
       <Stack spacing={2} sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ flexShrink: 0 }}>
           <Typography variant="subtitle1" fontWeight={600} sx={{ color: "#ffffff" }}>
@@ -2033,6 +2055,56 @@ export default function LevelEditor({
           </Box>
         )}
       </Stack>
+
+      {/* Dot Deletion Confirmation Dialog */}
+      <Dialog
+        open={deleteDotDialogOpen}
+        onClose={handleCancelDeleteDot}
+        PaperProps={{
+          sx: {
+            backgroundColor: "rgba(26, 26, 26, 0.95)",
+            border: "1px solid rgba(233, 226, 36, 0.3)",
+            borderRadius: 2,
+            minWidth: "320px",
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: "#ffffff", fontWeight: 600 }}>
+          Delete Dot
+        </DialogTitle>
+        <DialogContent>
+          <Typography sx={{ color: "rgba(255, 255, 255, 0.8)" }}>
+            Are you sure you want to delete this dot? This dot will be permanently deleted from your database. This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, borderTop: "1px solid rgba(233, 226, 36, 0.2)" }}>
+          <Button
+            onClick={handleCancelDeleteDot}
+            sx={{
+              color: "rgba(255, 255, 255, 0.7)",
+              "&:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDeleteDot}
+            variant="contained"
+            sx={{
+              backgroundColor: "#ff5252",
+              color: "#ffffff",
+              "&:hover": {
+                backgroundColor: "#d32f2f",
+              },
+            }}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+      </>
     );
   }
 
@@ -2585,6 +2657,55 @@ export default function LevelEditor({
 
         <Divider sx={{ borderColor: "rgba(233, 226, 36, 0.2)" }} />
       </Stack>
+
+      {/* Dot Deletion Confirmation Dialog */}
+      <Dialog
+        open={deleteDotDialogOpen}
+        onClose={handleCancelDeleteDot}
+        PaperProps={{
+          sx: {
+            backgroundColor: "rgba(26, 26, 26, 0.95)",
+            border: "1px solid rgba(233, 226, 36, 0.3)",
+            borderRadius: 2,
+            minWidth: "320px",
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: "#ffffff", fontWeight: 600 }}>
+          Delete Dot
+        </DialogTitle>
+        <DialogContent>
+          <Typography sx={{ color: "rgba(255, 255, 255, 0.8)" }}>
+            Are you sure you want to delete this dot? This dot will be permanently deleted from your database. This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, borderTop: "1px solid rgba(233, 226, 36, 0.2)" }}>
+          <Button
+            onClick={handleCancelDeleteDot}
+            sx={{
+              color: "rgba(255, 255, 255, 0.7)",
+              "&:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDeleteDot}
+            variant="contained"
+            sx={{
+              backgroundColor: "#ff5252",
+              color: "#ffffff",
+              "&:hover": {
+                backgroundColor: "#d32f2f",
+              },
+            }}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

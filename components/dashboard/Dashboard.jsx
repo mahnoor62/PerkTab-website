@@ -708,35 +708,40 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
   const handleConfirmDelete = async () => {
     if (!levelToDelete) return;
 
+    const levelToDeleteValue = levelToDelete;
+    
+    // Close dialog immediately to prevent flicker
+    setDeleteDialogOpen(false);
+    setLevelToDelete(null);
+    
     setIsDeleting(true);
     try {
-      await fetchJson(`/api/levels/${levelToDelete}`, {
+      await fetchJson(`/api/levels/${levelToDeleteValue}`, {
         method: "DELETE",
       });
 
-      // Remove deleted level from list and update selection
-      setLevels((prev) => {
-        const updated = prev.filter((lvl) => lvl.level !== levelToDelete).sort((a, b) => a.level - b.level);
-        
-        // If deleted level was selected, select first available level or null
-        if (selectedLevel === levelToDelete) {
+      // Update selection first if needed, then update levels list
+      if (selectedLevel === levelToDeleteValue) {
+        setLevels((prev) => {
+          const updated = prev.filter((lvl) => lvl.level !== levelToDeleteValue).sort((a, b) => a.level - b.level);
           if (updated.length > 0) {
             setSelectedLevel(updated[0].level);
           } else {
             setSelectedLevel(null);
           }
-        }
-        
-        return updated;
-      });
-
-      setDeleteDialogOpen(false);
-      setLevelToDelete(null);
+          return updated;
+        });
+      } else {
+        // Just update the levels list
+        setLevels((prev) => 
+          prev.filter((lvl) => lvl.level !== levelToDeleteValue).sort((a, b) => a.level - b.level)
+        );
+      }
 
       setAlertState({
         open: true,
         severity: "success",
-        message: `Level ${levelToDelete} deleted successfully.`,
+        message: `Level ${levelToDeleteValue} deleted successfully.`,
       });
     } catch (error) {
       setAlertState({
