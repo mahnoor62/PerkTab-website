@@ -307,9 +307,16 @@ export default function LevelEditor({
   const prevLevelRef = useRef(null);
   // Track the last saved state to compare changes
   const lastSavedStateRef = useRef(null);
+  // Track current formValues counts to prevent reset during user edits
+  const formValuesCountsRef = useRef({ dots: 0, colors: 0 });
 
   useEffect(() => {
     if (level) {
+      // If we're currently saving, don't reset formValues - wait for save to complete
+      if (isSaving) {
+        return;
+      }
+
       // Create a stable key from level data to detect changes
       const levelKey = JSON.stringify({
         _id: level._id,
@@ -325,6 +332,22 @@ export default function LevelEditor({
       if (prevLevelRef.current === levelKey) {
         return;
       }
+
+      // Check if current formValues has more recent changes than the incoming level
+      // This prevents resetting when user just made changes that haven't been saved yet
+      const levelDotsCount = Array.isArray(level.dots) ? level.dots.length : 0;
+      const levelColorsCount = Array.isArray(level.colors) ? level.colors.length : 0;
+      
+      // If formValues has more dots than level, user just added one - don't reset
+      if (formValuesCountsRef.current.dots > levelDotsCount) {
+        return;
+      }
+
+      // If formValues has more colors than level, user just added one - don't reset
+      if (formValuesCountsRef.current.colors > levelColorsCount) {
+        return;
+      }
+
       prevLevelRef.current = levelKey;
 
       // Initialize colors array - filter out null/undefined elements
@@ -434,7 +457,8 @@ export default function LevelEditor({
         onFormValuesChange(initialFormValues);
       }
     }
-  }, [level, onFormValuesChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [level?._id, level?.updatedAt, isSaving]);
   
   // Notify parent whenever formValues change (for real-time preview)
   useEffect(() => {
@@ -640,6 +664,8 @@ export default function LevelEditor({
             },
           ],
         };
+        // Update formValues counts ref
+        formValuesCountsRef.current.dots = newValues.dots.length;
         autoSave(newValues);
         return newValues;
       }
@@ -669,6 +695,8 @@ export default function LevelEditor({
           },
         ],
       };
+      // Update formValues counts ref
+      formValuesCountsRef.current.dots = newValues.dots.length;
       autoSave(newValues);
       return newValues;
     });
@@ -860,6 +888,8 @@ export default function LevelEditor({
           { color: "#000000", score: 0 },
         ],
       };
+      // Update formValues counts ref
+      formValuesCountsRef.current.colors = newValues.colors.length;
       autoSave(newValues);
       return newValues;
     });
@@ -903,6 +933,9 @@ export default function LevelEditor({
         colors: validColors.filter((_, i) => i !== index),
         dots: remainingDots,
       };
+      // Update formValues counts ref
+      formValuesCountsRef.current.colors = newValues.colors.length;
+      formValuesCountsRef.current.dots = newValues.dots.length;
       autoSave(newValues);
       return newValues;
     });
@@ -921,6 +954,8 @@ export default function LevelEditor({
         ...prev,
         dots: prev.dots.filter((_, i) => i !== dotToDelete),
       };
+      // Update formValues counts ref
+      formValuesCountsRef.current.dots = newValues.dots.length;
       autoSave(newValues);
       return newValues;
     });
