@@ -26,6 +26,7 @@ import {
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { getLogoUrl } from "@/lib/logo";
 
@@ -1183,6 +1184,33 @@ export default function LevelEditor({
     onSave(payload, true);
   };
 
+  const handleResetBackground = () => {
+    if (!level) return;
+    
+    // Reset background to white, backgroundType to null, logoUrl to null
+    const resetPayload = {
+      background: "#ffffff",
+      backgroundType: null,
+      logoUrl: null,
+    };
+    
+    // Update form values to reflect the reset
+    // Set backgroundType to 'color' for UI compatibility, but backend will receive null
+    setFormValues((prev) => ({
+      ...prev,
+      backgroundColor: "#ffffff",
+      backgroundImageUrl: "",
+      logoUrl: "",
+      backgroundType: "color", // Set to color for UI display, but send null to backend
+    }));
+    
+    // Update original background color ref
+    originalBackgroundColorRef.current = "#ffffff";
+    
+    // Save the reset values
+    onSave(resetPayload, true, level._id);
+  };
+
   const handleFileChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file || !onUploadLogo) {
@@ -1519,9 +1547,37 @@ export default function LevelEditor({
   if (backgroundOnly) {
     return (
       <Stack spacing={2}>
-        <Typography variant="subtitle1" fontWeight={600} sx={{ color: "#ffffff" }}>
-          Background Configuration
-        </Typography>
+        <Stack 
+          direction={{ xs: "column", sm: "row" }} 
+          spacing={2} 
+          alignItems={{ xs: "flex-start", sm: "center" }}
+          justifyContent="space-between"
+          sx={{ flexWrap: "wrap", gap: 2 }}
+        >
+          <Typography variant="subtitle1" fontWeight={600} sx={{ color: "#ffffff" }}>
+            Background Configuration
+          </Typography>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={handleResetBackground}
+            sx={{
+              px: 3,
+              py: 1,
+              borderRadius: 3,
+              borderColor: "rgba(255, 255, 255, 0.5)",
+              backgroundColor: "rgba(255, 255, 255, 0.1)",
+              color: "#ffffff",
+              whiteSpace: "nowrap",
+              "&:hover": {
+                borderColor: "#ffffff",
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+              },
+            }}
+          >
+            Reset Background
+          </Button>
+        </Stack>
         <Stack spacing={2}>
           {/* Background Type Selection */}
           <FormControl component="fieldset">

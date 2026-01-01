@@ -17,52 +17,28 @@ export default function LevelPreview({ level, formValues = null }) {
     );
   }
 
-  // Determine backgroundType from formValues or level data
-  const backgroundType = formValues?.backgroundType || level.backgroundType || 'color';
-  
-  // CRITICAL FIX: Always prioritize level data from database
-  // formValues is only for real-time preview when actively editing
-  // When level switches, editorFormValues is reset to null, so formValues should only exist for current level
-  // But to be safe, always use level.dots as base - only override with formValues.dots if they exist
-  const previewData = {
-    // Always use level.dots from database as primary source
+  // Use formValues if provided for real-time preview, otherwise use level data
+  const previewData = formValues ? {
+    dots: formValues.dots || level.dots || [],
+    dotSizes: formValues.dotSizes || level.dotSizes || [],
+    background: formValues.backgroundType === "image" 
+      ? formValues.backgroundImageUrl 
+      : formValues.backgroundColor || level.background || "",
+    logoUrl: formValues.backgroundType === "image" ? "" : (formValues.logoUrl || level.logoUrl || ""),
+  } : {
     dots: level.dots || [],
     dotSizes: level.dotSizes || [],
-    backgroundType: backgroundType,
-    background: backgroundType === "image" 
-      ? (level.backgroundImageUrl || level.background || "")
-      : (level.background || ""),
-    logoUrl: backgroundType === "image" ? "" : (level.logoUrl || ""),
+    background: level.background || "",
+    logoUrl: level.logoUrl || "",
   };
-  
-  // Only override with formValues for real-time preview if formValues exists
-  // This ensures we show user's edits while they're editing, but database data otherwise
-  if (formValues) {
-    if (formValues.dots && Array.isArray(formValues.dots)) {
-      previewData.dots = formValues.dots;
-    }
-    if (formValues.dotSizes && Array.isArray(formValues.dotSizes)) {
-      previewData.dotSizes = formValues.dotSizes;
-    }
-    if (formValues.backgroundColor || formValues.backgroundImageUrl) {
-      previewData.background = backgroundType === "image" 
-        ? (formValues.backgroundImageUrl || previewData.background)
-        : (formValues.backgroundColor || previewData.background);
-    }
-    if (formValues.logoUrl !== undefined) {
-      previewData.logoUrl = backgroundType === "image" ? "" : (formValues.logoUrl || "");
-    }
-  }
 
   const dots = Array.isArray(previewData.dots) ? previewData.dots : [];
-  // Determine background type using backgroundType field (preferred) or fallback to string detection
+  // Determine background type: if background starts with http, https, or /uploads/, it's an image URL; otherwise it's a color
   const background = previewData.background?.trim() || "#e9e224";
   
-  // Use backgroundType to determine if it's an image (preferred method)
-  const isImageUrl = previewData.backgroundType === "image";
-  
-  // Fallback: Check if background looks like an image URL (for backward compatibility with old records)
-  const looksLikeImageUrl = !isImageUrl && background && 
+  // Check if it's an image URL (starts with http, https, or /uploads/)
+  // Exclude hex colors and common color formats
+  const isImageUrl = background && 
     !background.startsWith("#") && 
     !background.match(/^rgba?\(/) &&
     (background.startsWith("http://") || 
@@ -70,25 +46,20 @@ export default function LevelPreview({ level, formValues = null }) {
      background.startsWith("/uploads/") ||
      background.startsWith("/"));
   
-  // Use backgroundType if available, otherwise use string detection
-  const finalIsImageUrl = isImageUrl || looksLikeImageUrl;
-  
-  const backgroundColor = finalIsImageUrl ? "transparent" : background;
+  const backgroundColor = isImageUrl ? "transparent" : background;
   // Get full URL for background image using getLogoUrl to format it properly
   // If getLogoUrl returns null, fall back to the original background value
-  const formattedUrl = finalIsImageUrl && background ? getLogoUrl(background) : null;
-  const backgroundImageUrl = formattedUrl || (finalIsImageUrl ? background : "");
+  const formattedUrl = isImageUrl && background ? getLogoUrl(background) : null;
+  const backgroundImageUrl = formattedUrl || (isImageUrl ? background : "");
   
   // Debug logging
   if (process.env.NODE_ENV === 'development') {
     console.log('[LevelPreview] Background:', {
-      backgroundType: previewData.backgroundType,
       background,
-      finalIsImageUrl,
+      isImageUrl,
       backgroundImageUrl,
       formattedUrl,
-      levelBackground: level.background,
-      levelBackgroundType: level.backgroundType
+      levelBackground: level.background
     });
   }
   
@@ -322,16 +293,16 @@ export default function LevelPreview({ level, formValues = null }) {
             height: "100%",
             borderRadius: 3,
             overflow: "hidden",
-            backgroundColor: finalIsImageUrl ? "transparent" : backgroundColor,
-            backgroundImage: finalIsImageUrl && backgroundImageUrl 
+            backgroundColor: isImageUrl ? "transparent" : backgroundColor,
+            backgroundImage: isImageUrl && backgroundImageUrl 
               ? `url("${backgroundImageUrl}")` 
               : "none",
-            backgroundSize: finalIsImageUrl ? "cover" : "auto",
-            backgroundPosition: finalIsImageUrl ? "center" : "top left",
-            backgroundRepeat: finalIsImageUrl ? "no-repeat" : "repeat",
+            backgroundSize: isImageUrl ? "cover" : "auto",
+            backgroundPosition: isImageUrl ? "center" : "top left",
+            backgroundRepeat: isImageUrl ? "no-repeat" : "repeat",
             position: "relative",
             // Ensure background image covers the entire area
-            ...(finalIsImageUrl && backgroundImageUrl && {
+            ...(isImageUrl && backgroundImageUrl && {
               backgroundAttachment: "scroll",
               minHeight: "100%",
             }),
@@ -377,7 +348,7 @@ export default function LevelPreview({ level, formValues = null }) {
             );
           })}
 
-          {previewData.logoUrl && previewData.backgroundType !== "image" && !finalIsImageUrl && (
+          {previewData.logoUrl && !isImageUrl && (
             <Box
               component="img"
               src={getLogoUrl(previewData.logoUrl)}
