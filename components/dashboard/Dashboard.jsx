@@ -485,6 +485,7 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [alertState, setAlertState] = useState(initialAlertState);
+  const [snackbarKey, setSnackbarKey] = useState(0);
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [isCreatingLevel, setIsCreatingLevel] = useState(false);
@@ -536,7 +537,7 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
 
   const handleSelectLevel = (levelNumber) => {
     setSelectedLevel(levelNumber);
-    setEditorFormValues(null); // Reset form values when switching levels
+    setEditorFormValues(null); // Reset form values when switching levels to prevent showing wrong level's data
   };
 
   // 🔹 sirf existing level update – backend already sirf DB update karega
@@ -569,6 +570,8 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
 
       // Update selected level data if it's the current one
       if ((levelId && selectedLevelData._id === levelId) || (!levelId && selectedLevelData.level === updated.level)) {
+        // Reset editorFormValues to ensure preview shows correct level's data after save
+        setEditorFormValues(null);
         // Force re-render by updating selected level data reference
         setSelectedLevel((prev) => prev); // Trigger re-selection
       }
@@ -1014,6 +1017,7 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
                             }}
                           >
                             <LevelEditor
+                              key={`background-${selectedLevelData?._id || 'none'}`}
                               level={selectedLevelData}
                               onSave={handleSaveLevel}
                               isSaving={isSaving}
@@ -1049,6 +1053,7 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
                             }}
                           >
                             <LevelEditor
+                              key={`dotsizes-${selectedLevelData?._id || 'none'}`}
                               level={selectedLevelData}
                               onSave={handleSaveLevel}
                               isSaving={isSaving}
@@ -1059,6 +1064,7 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
                               dotSizesOnly={true}
                             />
                             <LevelEditor
+                              key={`colors-${selectedLevelData?._id || 'none'}`}
                               level={selectedLevelData}
                               onSave={handleSaveLevel}
                               isSaving={isSaving}
@@ -1083,6 +1089,7 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
                             }}
                           >
                             <LevelEditor
+                              key={`dots-${selectedLevelData?._id || 'none'}`}
                               level={selectedLevelData}
                               onSave={handleSaveLevel}
                               isSaving={isSaving}
@@ -1092,6 +1099,15 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
                               isUploadingBackgroundImage={isUploadingLogo}
                               dotsOnly={true}
                               onFormValuesChange={setEditorFormValues}
+                              onDotAdded={(dotNumber) => {
+                                // Increment key to force Snackbar remount and show new message
+                                setSnackbarKey((prev) => prev + 1);
+                                setAlertState({
+                                  open: true,
+                                  severity: "success",
+                                  message: `Dot ${dotNumber} added successfully!`,
+                                });
+                              }}
                             />
                             <LevelPreview level={selectedLevelData} formValues={editorFormValues} />
                           </Box>
@@ -1107,6 +1123,7 @@ export default function Dashboard({ initialLevels = [], adminEmail }) {
       </Box>
 
       <Snackbar
+        key={snackbarKey}
         open={alertState.open}
         autoHideDuration={4000}
         onClose={() => setAlertState(initialAlertState)}

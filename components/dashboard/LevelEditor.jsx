@@ -277,6 +277,7 @@ export default function LevelEditor({
   dotsOnly = false,
   showBackgroundDetails = false,
   onFormValuesChange,
+  onDotAdded,
 }) {
   const [formValues, setFormValues] = useState(() => ({
     backgroundColor: "",
@@ -302,6 +303,11 @@ export default function LevelEditor({
   const previewBackgroundImageUrl = formValues.backgroundImageUrl 
     ? getLogoUrl(formValues.backgroundImageUrl)
     : null;
+  
+  // Helper to format logo URL for preview
+  const previewLogoUrl = formValues.logoUrl 
+    ? getLogoUrl(formValues.logoUrl)
+    : null;
 
   // Use a ref to track previous level data to detect actual changes
   const prevLevelRef = useRef(null);
@@ -309,6 +315,8 @@ export default function LevelEditor({
   const lastSavedStateRef = useRef(null);
   // Track current formValues counts to prevent reset during user edits
   const formValuesCountsRef = useRef({ dots: 0, colors: 0 });
+  // Track current level ID to prevent preserving backgroundType from previous level
+  const currentLevelIdRef = useRef(null);
 
   useEffect(() => {
     if (level) {
@@ -317,51 +325,94 @@ export default function LevelEditor({
         return;
       }
 
+      // CRITICAL: If level._id changed, we're switching to a different level - ALWAYS reset formValues
+      // Don't skip reset based on dot/color counts when switching levels
+      const isLevelSwitch = currentLevelIdRef.current !== null && currentLevelIdRef.current !== level._id;
+      
+      // CRITICAL FIX: When switching levels, ALWAYS reset formValues to show new level's data
+      // This ensures colors from one level don't appear in another level
+      if (isLevelSwitch) {
+        console.log(`[LevelEditor] Switching levels: ${currentLevelIdRef.current} -> ${level._id}, Level ${level.level}`);
+        console.log(`[LevelEditor] New level colors count: ${Array.isArray(level.colors) ? level.colors.length : 0}`);
+        // Clear prevLevelRef to force reset
+        prevLevelRef.current = null;
+        // Reset formValuesCountsRef to prevent count-based checks from blocking reset
+        formValuesCountsRef.current = { dots: 0, colors: 0 };
+      }
+      
       // Create a stable key from level data to detect changes
+      // Include backgroundType in key to detect when it changes in database
       const levelKey = JSON.stringify({
         _id: level._id,
         colors: level.colors,
         dotSizes: level.dotSizes,
         dots: level.dots,
         background: level.background,
+        backgroundType: level.backgroundType,
         logoUrl: level.logoUrl,
         updatedAt: level.updatedAt,
       });
 
-      // Only update if level data actually changed
-      if (prevLevelRef.current === levelKey) {
-        return;
-      }
-
-      // Check if current formValues has more recent changes than the incoming level
-      // This prevents resetting when user just made changes that haven't been saved yet
-      const levelDotsCount = Array.isArray(level.dots) ? level.dots.length : 0;
-      const levelColorsCount = Array.isArray(level.colors) ? level.colors.length : 0;
+      // Check if same level BEFORE updating currentLevelIdRef (needed for backgroundType check)
+      const isSameLevel = currentLevelIdRef.current === level._id;
       
-      // If formValues has more dots than level, user just added one - don't reset
-      if (formValuesCountsRef.current.dots > levelDotsCount) {
-        return;
-      }
+      // When switching levels, we already cleared prevLevelRef above, so skip levelKey check
+      // For same level, check if data actually changed
+      if (!isLevelSwitch) {
+        // Only update if level data actually changed (for same level)
+        if (prevLevelRef.current === levelKey) {
+          return;
+        }
+        
+        // Check if current formValues has more recent changes than the incoming level
+        // This prevents resetting when user just made changes that haven't been saved yet
+        const levelDotsCount = Array.isArray(level.dots) ? level.dots.length : 0;
+        const levelColorsCount = Array.isArray(level.colors) ? level.colors.length : 0;
+        
+        // If formValues has more dots than level, user just added one - don't reset
+        if (formValuesCountsRef.current.dots > levelDotsCount) {
+          return;
+        }
 
-      // If formValues has more colors than level, user just added one - don't reset
-      if (formValuesCountsRef.current.colors > levelColorsCount) {
-        return;
+        // If formValues has more colors than level, user just added one - don't reset
+        if (formValuesCountsRef.current.colors > levelColorsCount) {
+          return;
+        }
       }
-
+      
       prevLevelRef.current = levelKey;
 
       // Initialize colors array - filter out null/undefined elements
-      const initializedColors = Array.isArray(level.colors) && level.colors.length > 0
-        ? level.colors
-            .filter((c) => c != null && (c.color != null || c.color !== undefined))
-            .map((c) => ({
-              color: String(c?.color || ""),
-              score: typeof c?.score === 'number' ? c.score : (Number(c?.score) || 0),
-            }))
-        : [...PREDEFINED_COLORS];
+      // CRITICAL: Always use level.colors from database exactly as stored
+      // This ensures each level shows only its own colors, not colors from other levels
+      // IMPORTANT: When switching levels (isLevelSwitch), ALWAYS use the new level's colors
+      // Don't use formValues.colors from previous level - use ONLY level.colors from database
+      let initializedColors = [];
       
-      // Ensure colors array is never empty
-      const safeColors = initializedColors.length > 0 ? initializedColors : [...PREDEFINED_COLORS];
+      // ALWAYS use level.colors from database - no fallback to predefined or previous colors
+      // This is critical to prevent colors from one level appearing in another level
+      if (level.colors !== undefined && level.colors !== null && Array.isArray(level.colors)) {
+        if (level.colors.length > 0) {
+          // Use level.colors directly from database - create new array to avoid reference issues
+          initializedColors = level.colors
+            .filter((c) => c != null && c.color != null && String(c.color).trim() !== "")
+            .map((c) => ({
+              color: String(c.color || "").trim(),
+              score: typeof c.score === 'number' ? c.score : (Number(c.score) || 0),
+            }));
+        } else {
+          // Empty array in database - use empty array (not predefined colors)
+          initializedColors = [];
+        }
+      } else {
+        // No colors field in database - use empty array (not predefined colors)
+        initializedColors = [];
+      }
+      
+      // Use the colors exactly as they are from the database (can be empty array)
+      // This ensures level-specific colors are always used and no cross-contamination
+      // Create a new array reference to ensure React detects the change
+      const safeColors = [...initializedColors];
       
       // Initialize dotSizes array - filter out null/undefined elements
       let initializedDotSizes = Array.isArray(level.dotSizes) && level.dotSizes.length > 0
@@ -407,20 +458,44 @@ export default function LevelEditor({
       
       // Determine if background is a color or image URL
       const background = level.background || "";
+      const logoUrl = level.logoUrl || "";
       const isImageUrl = background && !background.startsWith("#") && 
         (background.startsWith("http") || background.startsWith("/"));
       
-      // Determine background type based on existing data
+      // Use backgroundType from database if available, otherwise infer from data
+      // IMPORTANT: Only preserve formValues.backgroundType if we're on the SAME level (same _id)
+      // This prevents copying backgroundType from one level to another
+      // isSameLevel was already calculated above
       let backgroundType = "color";
+      
+      if (level.backgroundType && ['color', 'colorLogo', 'image'].includes(level.backgroundType)) {
+        // Use saved backgroundType from database (highest priority)
+        backgroundType = level.backgroundType;
+      } else if (isSameLevel && formValues.backgroundType && ['color', 'colorLogo', 'image'].includes(formValues.backgroundType)) {
+        // ONLY preserve user's current selection if we're on the SAME level AND database doesn't have it yet
+        // This prevents copying backgroundType when switching between levels
+        backgroundType = formValues.backgroundType;
+        console.log(`[useEffect] Preserving user's backgroundType selection for same level:`, backgroundType);
+      } else {
+        // Fallback: Infer from existing data (for backward compatibility with old records)
+        if (isImageUrl) {
+          backgroundType = "image";
+        } else if (background && logoUrl) {
+          backgroundType = "colorLogo";
+        } else if (background) {
+          backgroundType = "color";
+        }
+      }
+      
+      // Update current level ID ref
+      currentLevelIdRef.current = level._id;
+      
       let backgroundColor = "";
       let backgroundImageUrl = "";
       
-      if (isImageUrl) {
-        backgroundType = "image";
+      if (backgroundType === "image") {
         backgroundImageUrl = background;
       } else if (background) {
-        // If there's a logo, assume "colorLogo", otherwise "color"
-        backgroundType = level.logoUrl ? "colorLogo" : "color";
         backgroundColor = background;
         // Store original background color for restoration when switching from image
         originalBackgroundColorRef.current = background;
@@ -436,14 +511,29 @@ export default function LevelEditor({
         colors: safeColors,
         dotSizes: safeDotSizes,
         dots: initializedDots,
-        logoUrl: level.logoUrl || "",
+        logoUrl: logoUrl,
         targetScore: typeof level.targetScore === 'number' ? level.targetScore : (level.targetScore !== undefined ? Number(level.targetScore) || 0 : 0),
       };
       
       setFormValues(initialFormValues);
+      // Update formValues counts ref to match the new level's data
+      formValuesCountsRef.current = {
+        dots: initializedDots.length,
+        colors: safeColors.length,
+      };
+      
+      // Debug log to verify colors are being set correctly
+      if (isLevelSwitch) {
+        console.log(`[LevelEditor] Set formValues for Level ${level.level}:`, {
+          colorsCount: safeColors.length,
+          colors: safeColors.map(c => c.color),
+          formValuesCounts: formValuesCountsRef.current
+        });
+      }
       // Store initial state as last saved state
       lastSavedStateRef.current = {
         background: level.background || "",
+        backgroundType: backgroundType,
         colors: JSON.stringify(safeColors),
         dotSizes: JSON.stringify(safeDotSizes),
         dots: JSON.stringify(initializedDots),
@@ -453,16 +543,18 @@ export default function LevelEditor({
       setBackgroundImageError(null);
       
       // Notify parent of form values change for real-time preview
-      if (onFormValuesChange) {
+      // Only update if onFormValuesChange is provided (dotsOnly mode) AND we're on the correct level
+      if (onFormValuesChange && level._id === currentLevelIdRef.current) {
         onFormValuesChange(initialFormValues);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [level?._id, level?.updatedAt, isSaving]);
+  }, [level?._id, level?.colors, level?.dotSizes, level?.dots, level?.background, level?.backgroundType, level?.logoUrl, level?.updatedAt, isSaving]);
   
   // Notify parent whenever formValues change (for real-time preview)
+  // Only update if this is for the current level (match by level._id)
   useEffect(() => {
-    if (onFormValuesChange && level) {
+    if (onFormValuesChange && level && level._id === currentLevelIdRef.current) {
       onFormValuesChange(formValues);
     }
   }, [formValues, onFormValuesChange, level]);
@@ -491,7 +583,13 @@ export default function LevelEditor({
   }, [formValues, level]);
 
   const autoSave = useCallback((values) => {
-    if (!level || !level._id) return;
+    if (!level || !level._id) {
+      console.warn(`[autoSave] Cannot save - level or level._id is missing`, { level: level?._id });
+      return;
+    }
+    
+    // Capture level ID to ensure we're saving to the correct level
+    const currentLevelId = level._id;
     
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -560,6 +658,7 @@ export default function LevelEditor({
       // Build current state for comparison
       const currentState = {
         background: finalBackgroundValue,
+        backgroundType: values.backgroundType || 'color',
         colors: JSON.stringify(processedColors),
         dotSizes: JSON.stringify(dotSizesToSave),
         dots: JSON.stringify(processedDots),
@@ -570,8 +669,19 @@ export default function LevelEditor({
       // Build payload with ONLY changed fields
       const payload = {};
       
-      if (!lastSavedStateRef.current || currentState.background !== lastSavedStateRef.current.background) {
+      // Always include backgroundType when background changes OR when backgroundType itself changes
+      // This ensures backgroundType is preserved when user changes backgroundColor
+      const backgroundChanged = !lastSavedStateRef.current || currentState.background !== lastSavedStateRef.current.background;
+      const backgroundTypeChanged = !lastSavedStateRef.current || currentState.backgroundType !== (lastSavedStateRef.current.backgroundType || 'color');
+      
+      if (backgroundChanged) {
         payload.background = finalBackgroundValue;
+        // When background changes, also include current backgroundType to preserve user's selection
+        payload.backgroundType = values.backgroundType || 'color';
+        console.log(`[autoSave] Background changed, including backgroundType:`, payload.backgroundType);
+      } else if (backgroundTypeChanged) {
+        payload.backgroundType = values.backgroundType || 'color';
+        console.log(`[autoSave] backgroundType changed, adding to payload:`, payload.backgroundType);
       }
       
       if (!lastSavedStateRef.current || currentState.colors !== lastSavedStateRef.current.colors) {
@@ -588,6 +698,11 @@ export default function LevelEditor({
       
       if (!lastSavedStateRef.current || currentState.logoUrl !== lastSavedStateRef.current.logoUrl) {
         payload.logoUrl = values.backgroundType === "image" ? "" : (values.logoUrl || "");
+        // When logoUrl changes, also ensure backgroundType is "colorLogo" if logo exists
+        if (values.logoUrl && values.backgroundType !== "image") {
+          payload.backgroundType = "colorLogo";
+          console.log(`[autoSave] Logo uploaded, setting backgroundType to colorLogo`);
+        }
       }
       
       if (!lastSavedStateRef.current || currentState.targetScore !== lastSavedStateRef.current.targetScore) {
@@ -596,11 +711,21 @@ export default function LevelEditor({
 
       // Only save if there are changes
       if (Object.keys(payload).length > 0) {
-        console.log(`[autoSave] Saving changes for level ${level._id}:`, Object.keys(payload));
-        // Use the new ID-based endpoint
-        onSave(payload, false, level._id);
-        // Update last saved state
-        lastSavedStateRef.current = currentState;
+        try {
+          console.log(`[autoSave] Saving changes for level ID: ${currentLevelId}, level number: ${level?.level}`);
+          console.log(`[autoSave] Payload keys:`, Object.keys(payload));
+          if (payload.dots) {
+            console.log(`[autoSave] Dots count in payload:`, payload.dots.length);
+          }
+          console.log(`[autoSave] Payload content:`, JSON.stringify(payload, null, 2));
+          // Use the new ID-based endpoint - use captured level ID to ensure we save to correct level
+          onSave(payload, false, currentLevelId);
+          // Update last saved state
+          lastSavedStateRef.current = currentState;
+        } catch (error) {
+          console.error(`[autoSave] Error saving level ${level?.level}:`, error);
+          // Don't update lastSavedStateRef on error so it can retry
+        }
       }
     }, 500);
   }, [level, onSave]);
@@ -666,7 +791,14 @@ export default function LevelEditor({
         };
         // Update formValues counts ref
         formValuesCountsRef.current.dots = newValues.dots.length;
+        const newDotNumber = newValues.dots.length;
         autoSave(newValues);
+        
+        // Show success message when dot is added (will be saved by autoSave)
+        if (onDotAdded) {
+          onDotAdded(newDotNumber);
+        }
+        
         return newValues;
       }
       
@@ -697,7 +829,14 @@ export default function LevelEditor({
       };
       // Update formValues counts ref
       formValuesCountsRef.current.dots = newValues.dots.length;
+      const newDotNumber = newValues.dots.length;
       autoSave(newValues);
+      
+      // Show success message when dot is added (will be saved by autoSave)
+      if (onDotAdded) {
+        onDotAdded(newDotNumber);
+      }
+      
       return newValues;
     });
   };
@@ -1030,18 +1169,17 @@ export default function LevelEditor({
       : [];
 
     const payload = {
-      ...formValues,
       background: finalBackgroundValue,
+      backgroundType: formValues.backgroundType || 'color',
       colors: processedColors,
       dotSizes: dotSizesToSave,
       dots: processedDots,
       // Only send logoUrl if backgroundType is not "image"
       logoUrl: formValues.backgroundType === "image" ? "" : formValues.logoUrl,
+      targetScore: typeof formValues.targetScore === 'number' ? formValues.targetScore : (Number(formValues.targetScore) || 0),
     };
-    // Clean up temporary fields
-    delete payload.backgroundColor;
-    delete payload.backgroundType;
-    delete payload.backgroundImageUrl;
+    // Clean up temporary fields (backgroundType is now saved in DB, so keep it)
+    // Don't delete backgroundType - it's now a saved field
     onSave(payload, true);
   };
 
@@ -1072,8 +1210,13 @@ export default function LevelEditor({
       const uploadedUrl = await onUploadLogo(file);
       if (uploadedUrl) {
         setFormValues((prev) => {
-          const newValues = { ...prev, logoUrl: uploadedUrl };
-          // Auto-save after upload
+          const newValues = { 
+            ...prev, 
+            logoUrl: uploadedUrl,
+            // Ensure backgroundType is set to "colorLogo" when logo is uploaded
+            backgroundType: prev.backgroundType === "image" ? "image" : "colorLogo"
+          };
+          // Auto-save after upload - this will save both logoUrl and backgroundType
           autoSave(newValues);
           return newValues;
         });
@@ -1158,6 +1301,10 @@ export default function LevelEditor({
 
   // If colorsOnly is true, show only the Colors panel
   if (colorsOnly) {
+    // Show loading spinner while level data is being initialized
+    // Check if level exists and formValues has been initialized from this level
+    const isLoading = !level || !formValues || (level && currentLevelIdRef.current !== level._id);
+    
     return (
       <Stack spacing={2} sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
         <Typography variant="subtitle1" fontWeight={600} sx={{ color: "#ffffff", flexShrink: 0 }}>
@@ -1176,55 +1323,63 @@ export default function LevelEditor({
             flexDirection: "column",
           }}
         >
-          <Stack spacing={2} sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ flexShrink: 0 }}>
-              <Typography variant="subtitle2" sx={{ color: "#ffffff", fontWeight: 600 }}>
-                Colors
+          {isLoading ? (
+            <Stack spacing={2} alignItems="center" justifyContent="center" sx={{ flex: 1 }}>
+              <CircularProgress size={32} sx={{ color: "#e9e224" }} />
+              <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
+                Loading colors...
               </Typography>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<AddIcon />}
-                onClick={handleAddColor}
+            </Stack>
+          ) : (
+            <Stack spacing={2} sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ flexShrink: 0 }}>
+                <Typography variant="subtitle2" sx={{ color: "#ffffff", fontWeight: 600 }}>
+                  Colors
+                </Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<AddIcon />}
+                  onClick={handleAddColor}
+                  sx={{
+                    borderRadius: 2,
+                    borderColor: "rgba(233, 226, 36, 0.5)",
+                    backgroundColor: "rgba(233, 226, 36, 0.1)",
+                    color: "#e9e224",
+                    "&:hover": {
+                      borderColor: "#e9e224",
+                      backgroundColor: "rgba(233, 226, 36, 0.2)",
+                    },
+                  }}
+                >
+                  Add Color
+                </Button>
+              </Stack>
+              <Box
                 sx={{
-                  borderRadius: 2,
-                  borderColor: "rgba(233, 226, 36, 0.5)",
-                  backgroundColor: "rgba(233, 226, 36, 0.1)",
-                  color: "#e9e224",
-                  "&:hover": {
-                    borderColor: "#e9e224",
-                    backgroundColor: "rgba(233, 226, 36, 0.2)",
+                  flex: 1,
+                  minHeight: 0,
+                  overflowY: "auto",
+                  overflowX: "hidden",
+                  pr: 1,
+                  "&::-webkit-scrollbar": {
+                    width: "8px",
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    background: "rgba(26, 26, 26, 0.5)",
+                    borderRadius: "4px",
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    background: "rgba(233, 226, 36, 0.4)",
+                    borderRadius: "4px",
+                    "&:hover": {
+                      background: "rgba(233, 226, 36, 0.6)",
+                    },
                   },
                 }}
               >
-                Add Color
-              </Button>
-            </Stack>
-            <Box
-              sx={{
-                flex: 1,
-                minHeight: 0,
-                overflowY: "auto",
-                overflowX: "hidden",
-                pr: 1,
-                "&::-webkit-scrollbar": {
-                  width: "8px",
-                },
-                "&::-webkit-scrollbar-track": {
-                  background: "rgba(26, 26, 26, 0.5)",
-                  borderRadius: "4px",
-                },
-                "&::-webkit-scrollbar-thumb": {
-                  background: "rgba(233, 226, 36, 0.4)",
-                  borderRadius: "4px",
-                  "&:hover": {
-                    background: "rgba(233, 226, 36, 0.6)",
-                  },
-                },
-              }}
-            >
-              <Stack spacing={1.5}>
-                {(formValues.colors || [])
+                <Stack spacing={1.5}>
+                  {(formValues.colors || [])
                   .filter((c) => c != null && c.color != null)
                   .map((colorItem, originalIndex) => {
                     // Find the actual index in the original array for correct updates
@@ -1354,6 +1509,7 @@ export default function LevelEditor({
               </Stack>
             </Box>
           </Stack>
+          )}
         </Paper>
       </Stack>
     );
@@ -1408,8 +1564,10 @@ export default function LevelEditor({
                     newValues.backgroundImageUrl = "";
                   }
                   
-                  // DON'T auto-save when just switching options - only save when user actually sets a value
-                  // The save will happen when user changes the color input or uploads an image
+                  // Trigger auto-save when backgroundType changes so it persists after refresh/level change
+                  // This ensures the background value (color or image) is saved immediately
+                  autoSave(newValues);
+                  
                   return newValues;
                 });
               }}
@@ -1572,8 +1730,36 @@ export default function LevelEditor({
                     },
                   }}
                 >
-                  Upload Logo
+                  {formValues.logoUrl ? "Replace Logo" : "Upload Logo"}
                 </Button>
+                {previewLogoUrl && (
+                  <Box
+                    sx={{
+                      mt: 2,
+                      p: 2,
+                      borderRadius: 2,
+                      backgroundColor: "rgba(26, 26, 26, 0.5)",
+                      border: "1px solid rgba(233, 226, 36, 0.3)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <img
+                      src={previewLogoUrl}
+                      alt="Logo preview"
+                      style={{
+                        maxWidth: "100%",
+                        maxHeight: "100px",
+                        objectFit: "contain",
+                      }}
+                      onError={(e) => {
+                        console.error("Failed to load logo:", previewLogoUrl);
+                        e.target.style.display = "none";
+                      }}
+                    />
+                  </Box>
+                )}
                 {imageError && (
                   <Typography
                     variant="body2"
@@ -1926,6 +2112,10 @@ export default function LevelEditor({
 
   // If dotsOnly is true, show only dots
   if (dotsOnly) {
+    // Show loading spinner while level data is being initialized
+    // Check if level exists and formValues has been initialized from this level
+    const isLoading = !level || !formValues || (level && currentLevelIdRef.current !== level._id);
+    
     return (
       <>
       <Stack spacing={2} sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -1937,6 +2127,7 @@ export default function LevelEditor({
             variant="outlined"
             startIcon={<AddIcon />}
             onClick={handleAddDot}
+            disabled={isLoading}
             sx={{
               borderRadius: 2,
               borderColor: "rgba(233, 226, 36, 0.5)",
@@ -1946,13 +2137,25 @@ export default function LevelEditor({
                 borderColor: "#e9e224",
                 backgroundColor: "rgba(233, 226, 36, 0.2)",
               },
+              "&:disabled": {
+                borderColor: "rgba(233, 226, 36, 0.3)",
+                backgroundColor: "rgba(233, 226, 36, 0.05)",
+                color: "rgba(233, 226, 36, 0.5)",
+              },
             }}
           >
             Add Dot
           </Button>
         </Stack>
 
-        {formValues.dots.length === 0 ? (
+        {isLoading ? (
+          <Stack spacing={2} alignItems="center" justifyContent="center" sx={{ flex: 1, minHeight: "500px" }}>
+            <CircularProgress size={32} sx={{ color: "#e9e224" }} />
+            <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
+              Loading dots...
+            </Typography>
+          </Stack>
+        ) : formValues.dots.length === 0 ? (
           <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.6)", textAlign: "center", py: 2 }}>
             No dots added yet. Click "Add Dot" to add your first dot.
           </Typography>
